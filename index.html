@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fondamenti di Informatica - Polimi</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" href="./logo/black%20code.png" media="(prefers-color-scheme: light)">
+<link rel="icon" type="image/png" href="./logo/white%20code.png" media="(prefers-color-scheme: dark)">  
+
+<!--CSS -->
+<link rel="stylesheet" href="style.css" >
+
+<!-- defer significa che lo script viene caricato in background, dopo che HTML è stato caricato -->
+<script src="script.js" defer></script> 
+
+</head>
+<body>
+
+<header class="topbar">
+  <span class="brand">Fondamenti di Informatica - Polimi</span>
+  <button class="aa" id="aaBtn" aria-label="Aspetto e dimensione testo" aria-expanded="false" aria-controls="settings">
+    <span class="s">a</span><span class="l">A</span>
+  </button>
+</header>
+
+<div class="settings" id="settings" hidden>
+  <div class="row">
+    <span class="lbl">Dimensione testo</span>
+    <div class="stepper">
+      <button id="zMinus" aria-label="Riduci dimensione testo">&minus;</button>
+      <output id="zVal">100%</output>
+      <button id="zPlus" aria-label="Aumenta dimensione testo">+</button>
+    </div>
+  </div>
+  <div class="row">
+    <span class="lbl">Theme</span>
+    <div class="themes">
+      <button class="th" data-theme-btn="light" aria-pressed="true" aria-label="Tema chiaro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
+        <span class="rd"></span>
+      </button>
+      <button class="th" data-theme-btn="dark" aria-pressed="false" aria-label="Tema scuro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>
+        <span class="rd"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<main id="content" aria-live="polite"></main>
+
+<div class="day-menu" id="dayMenu" role="menu" hidden></div>
+
+<nav class="nav" id="navBar" aria-label="Navigazione tra i Day">
+  <button class="arrow" id="prevBtn" aria-label="Day precedente">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+  </button>
+  <button class="dots" id="dotsBtn" aria-label="Scegli il Day" aria-expanded="false" aria-controls="dayMenu"></button>
+  <button class="arrow" id="nextBtn" aria-label="Day successivo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+  </button>
+</nav>
+
+
+<!-- =====================================================================
+     APPUNTI
+     Gli appunti NON stanno più in questo file: ogni giornata è un frammento
+     HTML nella cartella appunti/ (day-01.html, day-02.html, ...), caricato da
+     script.js con fetch(). Per aggiungere un nuovo Day: duplica
+     appunti/_template-day.html, rinominalo (es. day-04.html) e registralo
+     nel catalogo "days" in script.js. Pallini e menu si aggiornano da soli.
+     ===================================================================== -->
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
+
+</body>
+</html>

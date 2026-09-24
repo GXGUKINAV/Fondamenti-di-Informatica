@@ -1,0 +1,107 @@
+<!-- =====================================================================
+     TEMPLATE PER UN NUOVO DAY
+     Come usarlo:
+     1. Duplica questo file e rinominalo, ad esempio day-04.html.
+     2. Sostituisci i testi di esempio con i tuoi appunti.
+     3. Aggiungi il nuovo Day nel catalogo "days" in script.js:
+          { n: 4, title: 'Titolo del Day 4', file: 'appunti/day-04.html' }
+
+     Regole:
+     - Questo è un FRAMMENTO HTML: niente doctype, niente tag html/head/body,
+       niente tag style o script, e niente CSS/JavaScript inline.
+     - NON scrivere il titolo del Day e la scritta "Day N": li genera
+       script.js dal catalogo.
+     - Formule: $...$ in linea, $$...$$ centrate (KaTeX).
+     - Dentro le formule scrivi \lt al posto di < (es. $x \lt y$), altrimenti
+       l'HTML lo scambia per l'inizio di un tag.
+     - Riquadri: <div class="box def|thm|ex|warn"><div class="bt">Titolo</div>...</div>
+     - Se una sezione non serve, cancellala.
+     ===================================================================== -->
+
+
+<!-- ===================== 1. INTRODUZIONE ===================== -->
+<h2>1. Introduzione</h2>
+<p>Breve presentazione dell'argomento della lezione: di cosa si parla, perché è utile e come si collega ai Day precedenti. Una formula in linea si scrive così: $f\colon A\to B$.</p>
+
+
+<!-- ===================== 2. DEFINIZIONI FORMALI ===================== -->
+<h2>2. Definizioni</h2>
+<p>Testo di raccordo prima della definizione (facoltativo).</p>
+
+<div class="box def">
+<div class="bt">Definizione — Nome del concetto</div>
+<p>Sia $A\subseteq\mathbb R$. Si dice che $A$ è <strong>limitato</strong> se esiste $M\in\mathbb R$ tale che</p>
+$$|a|\le M \qquad \forall a\in A.$$
+</div>
+<!-- Copia il riquadro qui sopra per ogni altra definizione. -->
+
+
+<!-- ===================== 3. TEOREMI ED ENUNCIATI ===================== -->
+<h2>3. Teoremi</h2>
+
+<div class="box thm">
+<div class="bt">Teorema — Nome del teorema</div>
+<p>Ipotesi: siano $a,b\in\mathbb R$ con $a\lt b$. Allora</p>
+$$a\lt\frac{a+b}{2}\lt b.$$
+</div>
+<!-- Copia il riquadro qui sopra per ogni altro enunciato. -->
+
+
+<!-- ===================== 4. DIMOSTRAZIONI ===================== -->
+<h2>4. Dimostrazioni</h2>
+
+<h3>Dimostrazione del teorema</h3>
+<p>Descrivi l'idea della dimostrazione, poi scrivi i passaggi:</p>
+$$\begin{aligned}
+\frac{a+b}{2}-a &=\frac{b-a}{2}\\
+&\gt 0.
+\end{aligned}$$
+<p>Conclusione: spiega perché l'enunciato è dimostrato.</p>
+
+
+<!-- ===================== 5. ESEMPI E OSSERVAZIONI ===================== -->
+<h2>5. Esempi e osservazioni</h2>
+
+<div class="box ex">
+<div class="bt">Esempio — Titolo dell'esempio</div>
+<p>Testo dell'esercizio o dell'esempio svolto, con i passaggi:</p>
+<ul>
+<li>primo passaggio, con la formula $x^2\ge 0$;</li>
+<li>secondo passaggio;</li>
+<li>risultato finale.</li>
+</ul>
+</div>
+
+<p><strong>Osservazione.</strong> Commento, collegamento con altri argomenti o caso particolare da ricordare.</p>
+
+<!-- Tabella (facoltativa): il contenitore .tbl la rende scorrevole su mobile.
+<div class="tbl">
+<table>
+<thead><tr><th>Colonna 1</th><th>Colonna 2</th></tr></thead>
+<tbody>
+<tr><td>$x$</td><td>$x^2$</td></tr>
+</tbody>
+</table>
+</div>
+-->
+
+
+<!-- ===================== 6. ERRORI DA EVITARE ===================== -->
+<h2>6. Errori da evitare</h2>
+<div class="box warn">
+<div class="bt">Attenzione</div>
+<ul>
+<li>Primo errore frequente, con la formula corretta $\sqrt{x^2}=|x|$.</li>
+<li>Secondo errore frequente.</li>
+</ul>
+</div>
+
+
+<!-- ===================== 7. RIEPILOGO FINALE ===================== -->
+<h2>7. Riepilogo finale</h2>
+<p>Cosa devi saper fare dopo questo Day:</p>
+<ul>
+<li>enunciare le definizioni principali;</li>
+<li>enunciare e saper dimostrare i teoremi chiave;</li>
+<li>applicarli agli esercizi tipo.</li>
+</ul>

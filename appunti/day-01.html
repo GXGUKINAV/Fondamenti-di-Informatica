@@ -1,0 +1,258 @@
+<h2>1. Obiettivo del corso</h2>
+<p>Il corso introduce l'informatica con attenzione alle <strong>basi concettuali</strong>: non basta scrivere un programma che sembra funzionare; bisogna capire il problema, scegliere un algoritmo adatto, motivare le scelte e verificare il risultato. Non sono richieste conoscenze pregresse di programmazione; servono invece attenzione nella lettura dei testi, capacità di esprimersi chiaramente e familiarità con le operazioni matematiche elementari.</p>
+<p>La traccia generale del corso è: <strong>rappresentazione &rarr; elaborazione &rarr; visualizzazione</strong>.</p>
+<ul>
+<li><strong>Rappresentazione:</strong> tradurre numeri, testi, immagini, suoni e altre informazioni in una forma utilizzabile dal calcolatore.</li>
+<li><strong>Elaborazione:</strong> progettare algoritmi e realizzarli in programmi; nel corso si userà soprattutto C e, secondo il programma delle slide, si introdurrà Python.</li>
+<li><strong>Visualizzazione:</strong> comunicare il risultato in una forma utile per la persona e per il dispositivo utilizzato.</li>
+</ul>
+<p>Informatica non significa semplicemente &laquo;usare il computer&raquo; o &laquo;conoscere Internet&raquo;: riguarda la rappresentazione e l'elaborazione rigorosa dell'informazione. Il software è ormai presente anche in automobili, elettrodomestici e telefoni; in certi contesti un errore ha conseguenze molto più gravi che in una normale app.</p>
+
+<h3>IA generativa: come usarla</h3>
+<div class="box warn">
+<div class="bt">Uso critico degli strumenti di IA</div>
+<p>Il professore invita a usare strumenti come ChatGPT <strong>con senso critico</strong>, non come sostituti della comprensione. Possono suggerire codice e spiegazioni, ma lo studente deve saper stabilire se una soluzione risponde al problema, se funziona e se è adeguata. Per preparare l'esame, resta centrale saper svolgere e spiegare personalmente gli esercizi.</p>
+</div>
+<p><em>Nota: secondo quanto detto a lezione, all'esame la soluzione dovrebbe basarsi su quanto spiegato durante il corso; per i dettagli formali valgono comunque le indicazioni ufficiali del corso.</em></p>
+
+<h2>2. Organizzazione e indicazioni d'esame</h2>
+<p>Le slide indicano circa <strong>48 ore di lezioni</strong>, <strong>40 di esercitazioni</strong> e <strong>12 di laboratorio</strong>. L'esercitazione mostra come affrontare problemi; il laboratorio è pensato come occasione per lavorare attivamente in prima persona. Il materiale, incluse slide e altre risorse, è indicato su <strong>WeBeep</strong>. Il libro di riferimento nelle slide è Ceri, Mandrioli e Sbattella, <em>Informatica: Programmazione</em>.</p>
+<p>Dalla spiegazione emergono alcune indicazioni pratiche:</p>
+<ul>
+<li>esame scritto;</li>
+<li>possibilità di ritirarsi senza consegnare;</li>
+<li>voto proposto che può essere rifiutato, nel qual caso un nuovo appello riparte da zero;</li>
+<li>eventuali punti aggiuntivi durante il corso;</li>
+<li>chi ottiene meno di 10 nell'esame completo deve saltare un appello (indicazione delle slide);</li>
+<li>possibili colloqui per discutere o chiarire un elaborato, e regole contro la copiatura.</li>
+</ul>
+<div class="box warn">
+<div class="bt">Da verificare sulle fonti ufficiali</div>
+<p>Alcuni passaggi della trascrizione della lezione erano poco chiari: durata, struttura definitiva della prova, materiali ammessi, scadenze e procedure vanno verificati su WeBeep o nelle comunicazioni ufficiali del corso, e non vanno considerati regole certe solo perché menzionati a lezione.</p>
+</div>
+
+<h2>3. Informazione e rappresentazione</h2>
+<div class="box def">
+<div class="bt">Dato e informazione</div>
+<p>Un <strong>dato</strong> è una configurazione o un valore; l'<strong>informazione</strong> è il significato che gli attribuiamo nel contesto. Per esempio, <code>27</code> può indicare un giorno del mese, un voto o un numero di maglia. Anche la sequenza di bit <code>01000001</code> non dice da sola che cosa rappresenti: dipende dalla codifica concordata.</p>
+</div>
+<p>La stessa informazione può essere espressa in forme diverse, come &laquo;oggi&raquo;, &laquo;today&raquo; o &laquo;aujourd'hui&raquo;. Un calcolatore, però, memorizza ed elabora sequenze di <strong>bit</strong> (0 e 1): dobbiamo concordare regole per interpretarle come numeri, caratteri, colori e così via. Il bit è una cifra binaria; <strong>1 byte = 8 bit</strong>.</p>
+
+<h3>Analogico e digitale</h3>
+<p>Una grandezza analogica può variare con continuità; una rappresentazione digitale usa un insieme discreto di valori. Per digitalizzare un segnale che varia nel tempo, come un suono, occorre distinguere due scelte:</p>
+<ol>
+<li><strong>Campionamento:</strong> in quali istanti misurare il segnale. Campioni più ravvicinati descrivono meglio le variazioni nel tempo.</li>
+<li><strong>Quantizzazione:</strong> con quali valori disponibili approssimare ogni misura. Più livelli consentono un'approssimazione più fine.</li>
+</ol>
+<p>Il risultato non è automaticamente identico all'originale: dipende dalla precisione scelta. Per le immagini, invece, la suddivisione spaziale è in <strong>pixel</strong> e ogni pixel deve avere un colore codificabile. Più pixel o più colori possibili per pixel significano, in una rappresentazione non compressa, più dati da memorizzare.</p>
+
+<h3>Quante alternative con n bit?</h3>
+<p>Con <strong>n bit</strong> si possono formare</p>
+$$2^n \text{ configurazioni distinte:}$$
+<ul>
+<li>1 bit &rarr; 2 configurazioni;</li>
+<li>2 bit &rarr; 4 configurazioni;</li>
+<li>3 bit &rarr; 8 configurazioni;</li>
+<li>10 bit &rarr; 1024 configurazioni.</li>
+</ul>
+<div class="box ex">
+<div class="bt">Esempio &mdash; quanti bit per 26 simboli?</div>
+<p>Per distinguere 26 simboli servono almeno <strong>5 bit</strong>, perché $2^4=16$ non bastano e $2^5=32$ sì. Le configurazioni in più possono restare inutilizzate o servire ad altri simboli.</p>
+</div>
+<p><strong>Testi:</strong> una codifica assegna a ogni carattere un numero. Per esempio, nelle slide <code>A</code> ha codice ASCII 65, rappresentabile con <code>01000001</code> su 8 bit. L'ASCII originario è a 7 bit (128 codici); non tutte le lingue e i simboli moderni sono coperti dall'ASCII di base. Non bastano soltanto le 26 lettere: servono anche spazi, cifre e punteggiatura.</p>
+<p><strong>Immagini:</strong> se un pixel ammette 2 colori basta 1 bit; se ammette 1024 colori servono 10 bit.</p>
+<div class="box ex">
+<div class="bt">Esempio &mdash; dimensione di una piccola immagine</div>
+<p>Una griglia di 8 &times; 8 pixel contiene 64 pixel: a 10 bit per pixel richiede</p>
+$$64 \times 10 = 640 \text{ bit} = 80 \text{ byte},$$
+<p>se si ignorano intestazioni, metadati e compressione. Un modello frequente per i colori è RGB, basato sulle componenti rosso, verde e blu.</p>
+</div>
+
+<h2>4. Sistemi di numerazione posizionali</h2>
+<p>In una base $b$, le cifre ammesse vanno da $0$ a $b-1$. Il valore di ciascuna cifra dipende dalla posizione: da destra verso sinistra, i pesi sono $b^0, b^1, b^2, \dots$</p>
+<div class="box warn">
+<div class="bt">Attenzione all'ambiguità della base</div>
+<p>La scrittura <code>103</code> senza base è ambigua:</p>
+$$103_{10} = 103, \qquad 103_{7} = 1\times 7^2 + 0\times 7 + 3 = 52_{10}.$$
+<p>Scrivi sempre la base quando potrebbe esserci ambiguità.</p>
+</div>
+<div class="box ex">
+<div class="bt">Esempio &mdash; da binario a decimale</div>
+$$11101101_2 = 1\times2^7+1\times2^6+1\times2^5+0\times2^4+1\times2^3+1\times2^2+0\times2^1+1\times2^0 = 237_{10}.$$
+</div>
+
+<h3>Dal decimale a un'altra base</h3>
+<p>Dividi ripetutamente il numero per la nuova base e annota i resti; poi <strong>leggi i resti dal basso verso l'alto</strong>.</p>
+<div class="box ex">
+<div class="bt">Esempio &mdash; $13_{10}$ in base 2</div>
+<div class="tbl">
+<table>
+<thead><tr><th>Divisione</th><th>Quoziente</th><th>Resto</th></tr></thead>
+<tbody>
+<tr><td>$13 \div 2$</td><td>6</td><td>1</td></tr>
+<tr><td>$6 \div 2$</td><td>3</td><td>0</td></tr>
+<tr><td>$3 \div 2$</td><td>1</td><td>1</td></tr>
+<tr><td>$1 \div 2$</td><td>0</td><td>1</td></tr>
+</tbody>
+</table>
+</div>
+<p>Leggendo i resti dal basso verso l'alto: $13_{10} = 1101_2$.</p>
+</div>
+<p>La stessa procedura vale per basi diverse, cambiando il divisore.</p>
+<p>Per passare tra binario e una base che è potenza di 2 si possono raggruppare i bit partendo da destra: gruppi di <strong>3 bit</strong> per l'ottale ($8=2^3$), gruppi di <strong>4 bit</strong> per l'esadecimale ($16=2^4$).</p>
+<div class="box ex">
+<div class="bt">Esempio &mdash; raggruppamento dei bit</div>
+<p>Ottale: $11101101_2 = 011\ 101\ 101_2 = 355_8$.</p>
+<p>Esadecimale: $1110\ 1101_2 = ED_{16}$.</p>
+</div>
+
+<h3>Numero di bit e intervallo</h3>
+<p>Con $n$ bit senza segno si rappresentano gli interi da $0$ a $2^n-1$: con 8 bit, da 0 a 255.</p>
+<div class="box warn">
+<div class="bt">Attenzione: massimo valore vs quantità di valori</div>
+<p>Da 0 a 31 ci sono <strong>32 valori</strong> e bastano 5 bit; da 0 a 32 ci sono <strong>33 valori</strong> e ne servono 6. Non confondere il valore massimo rappresentabile con il numero di valori disponibili.</p>
+</div>
+<div class="box thm">
+<div class="bt">Bit minimi per rappresentare un numero</div>
+<p>Per un intero positivo $N$, il minimo numero di bit per scriverlo in binario è</p>
+$$\lfloor \log_2 N \rfloor + 1;$$
+<p>lo zero va considerato a parte e richiede almeno un bit nella normale scrittura binaria.</p>
+</div>
+
+<h2>5. Operazioni binarie</h2>
+<p>L'addizione segue le stesse idee della somma in colonna in decimale, ma con sole due cifre:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Somma</th><th>Cifra scritta</th><th>Riporto</th></tr></thead>
+<tbody>
+<tr><td>0 + 0</td><td>0</td><td>0</td></tr>
+<tr><td>0 + 1 oppure 1 + 0</td><td>1</td><td>0</td></tr>
+<tr><td>1 + 1</td><td>0</td><td>1</td></tr>
+<tr><td>1 + 1 + riporto 1</td><td>1</td><td>1</td></tr>
+</tbody>
+</table>
+</div>
+<div class="box ex">
+<div class="bt">Esempio &mdash; addizione binaria</div>
+<p>$0101_2 + 0011_2 = 1000_2$, cioè $5+3=8$.</p>
+</div>
+<div class="box warn">
+<div class="bt">OR logico &ne; somma aritmetica</div>
+<p>Non bisogna confondere l'<strong>OR logico</strong> con la somma aritmetica. In particolare:</p>
+$$1 \text{ OR } 1 = 1, \qquad \text{ma} \qquad 1+1=10_2.$$
+</div>
+<p>Quando la macchina lavora con un numero fisso di bit, occorre controllare che il risultato sia rappresentabile. Per distinguere il significato dei bit, specifichiamo anche se la codifica è senza segno, modulo e segno, complemento a uno o complemento a due.</p>
+
+<h2>6. Numeri interi con segno</h2>
+<p>Una stessa parola di bit può assumere valori diversi secondo la <strong>codifica</strong>.</p>
+<div class="box ex">
+<div class="bt">Esempio &mdash; stessa parola, codifiche diverse</div>
+<p>Con 4 bit, <code>1110</code> vale:</p>
+<ul>
+<li>14, se interpretato come intero senza segno;</li>
+<li>&minus;6, in modulo e segno;</li>
+<li>&minus;1, in complemento a uno;</li>
+<li>&minus;2, in complemento a due.</li>
+</ul>
+</div>
+
+<div class="tbl">
+<table>
+<thead><tr><th>Codifica su $n$ bit</th><th>Come si rappresenta un negativo</th><th>Intervallo</th><th>Zero</th></tr></thead>
+<tbody>
+<tr>
+<td>Modulo e segno</td>
+<td>Primo bit per il segno (1 = negativo), gli altri $n-1$ per il valore assoluto</td>
+<td>$-(2^{n-1}-1) \dots +(2^{n-1}-1)$</td>
+<td>Due rappresentazioni: $+0$ e $-0$</td>
+</tr>
+<tr>
+<td>Complemento a uno</td>
+<td>Si invertono tutti i bit della codifica positiva, mantenendo $n$ bit</td>
+<td>$-(2^{n-1}-1) \dots +(2^{n-1}-1)$</td>
+<td>Due rappresentazioni: $+0$ e $-0$</td>
+</tr>
+<tr>
+<td>Complemento a due</td>
+<td>Si invertono i bit della codifica positiva e si aggiunge 1, mantenendo $n$ bit</td>
+<td>$-2^{n-1} \dots +(2^{n-1}-1)$</td>
+<td>Una rappresentazione</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>Modulo e segno</h3>
+<p>Con 4 bit, $+6=0110$ e $-6=1110$: cambia soltanto il bit del segno. La lettura è intuitiva, ma per sommare due numeri bisogna analizzare i segni e, se sono diversi, confrontare i valori assoluti.</p>
+<div class="box ex">
+<div class="bt">Esempio &mdash; somma in modulo e segno</div>
+<p>Per calcolare $+6+(-4)$ si sottrae 4 da 6 e si conserva il segno del numero con valore assoluto maggiore: risultato $+2$.</p>
+</div>
+
+<h3>Complemento a uno</h3>
+<p>Sempre su 4 bit, $+6=0110$; invertendo ogni bit si ottiene $-6=1001$.</p>
+<div class="box def">
+<div class="bt">End-around carry</div>
+<p>Per un'addizione con riporto oltre il bit più a sinistra, in questa codifica il riporto va <strong>sommato al risultato rimasto</strong> (end-around carry), se non c'è overflow.</p>
+</div>
+<div class="box ex">
+<div class="bt">Esempio su 6 bit &mdash; complemento a uno</div>
+<p>$+25 = 011001$, $-3 = 111100$.</p>
+$$011001 + 111100 = (1)010101.$$
+<p>Aggiungendo il riporto:</p>
+$$010101 + 1 = 010110, \quad \text{cioè } +22.$$
+<p>Il complemento a uno mantiene comunque due zeri e può richiedere questa seconda somma.</p>
+</div>
+
+<h3>Complemento a due</h3>
+<p>Su 4 bit, da $+6=0110$ si invertono i bit ($1001$) e si aggiunge 1: $-6=1010$.</p>
+<div class="box def">
+<div class="bt">Metodo rapido</div>
+<p>Un metodo rapido equivalente: da destra lasci invariati tutti gli zeri e il primo 1 incontrato, poi inverti i bit rimanenti a sinistra.</p>
+</div>
+<div class="box ex">
+<div class="bt">Esempio su 6 bit &mdash; complemento a due</div>
+<p>$+25 = 011001$, $+3 = 000011$, quindi $-3 = 111101$.</p>
+$$011001 + 111101 = (1)010110, \quad \text{produce } +22.$$
+<p>In complemento a due il riporto oltre i 6 bit si <strong>scarta</strong>, senza risommarlo.</p>
+</div>
+<p>Con 4 bit l'intervallo è $-8 \dots +7$; con 8 bit è $-128 \dots +127$. Il complemento a due è asimmetrico proprio perché c'è un solo zero e un valore negativo in più.</p>
+
+<h2>7. Overflow: quando il risultato non ci sta</h2>
+<div class="box def">
+<div class="bt">Overflow</div>
+<p>L'<strong>overflow</strong> non significa semplicemente &laquo;c'è un riporto finale&raquo;. In una somma in complemento a due con $n$ bit si verifica quando il risultato matematico esce dall'intervallo rappresentabile.</p>
+</div>
+<div class="box thm">
+<div class="bt">Come riconoscere l'overflow</div>
+<ul>
+<li>Se sommi <strong>due positivi</strong> e la parola ottenuta appare negativa, c'è overflow.</li>
+<li>Se sommi <strong>due negativi</strong> e la parola ottenuta appare positiva, c'è overflow.</li>
+<li>Se i due addendi hanno <strong>segni opposti</strong>, non c'è overflow per quella somma.</li>
+<li>Regola equivalente: il <strong>riporto entrante nel bit di segno</strong> è diverso dal <strong>riporto uscente dal bit di segno</strong>.</li>
+</ul>
+</div>
+<div class="box ex">
+<div class="bt">Esempio &mdash; overflow senza riporto finale</div>
+<p>Con 4 bit in complemento a due: $+5=0101$ e $+4=0100$.</p>
+$$0101 + 0100 = 1001,$$
+<p>che in questa codifica significa $-7$; il risultato matematico sarebbe $+9$, fuori dall'intervallo $-8 \dots +7$. <strong>C'è overflow</strong>, anche se non esce alcun riporto finale.</p>
+</div>
+<div class="box ex">
+<div class="bt">Esempio &mdash; riporto finale senza overflow</div>
+<p>$+3 = 0011$, $-1 = 1111$:</p>
+$$0011 + 1111 = (1)0010.$$
+<p>Scarto il riporto e ottengo correttamente $+2$: un riporto finale può esserci anche in un'operazione perfettamente valida.</p>
+</div>
+
+<h2>Da ricordare prima degli esercizi</h2>
+<div class="box warn">
+<div class="bt">Checklist</div>
+<ul>
+<li>Scrivi sempre la <strong>base</strong> quando potrebbe esserci ambiguità.</li>
+<li>Scrivi sempre il <strong>numero di bit</strong> e la <strong>codifica</strong> usata per i numeri negativi.</li>
+<li>Con $n$ bit ci sono $2^n$ configurazioni, ma l'<strong>intervallo numerico</strong> dipende dalla codifica.</li>
+<li>In complemento a uno, un riporto finale può dover essere <strong>riaggiunto</strong>; in complemento a due viene <strong>scartato</strong>. In entrambi i casi controlla che il risultato matematico sia rappresentabile.</li>
+<li>Un programma, una rappresentazione o una risposta dell'IA non basta che &laquo;dia un numero&raquo;: devi saper spiegare <strong>che cosa significa</strong> e <strong>perché è corretta</strong>.</li>
+</ul>
+</div>
