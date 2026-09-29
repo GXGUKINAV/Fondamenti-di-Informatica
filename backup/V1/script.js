@@ -8,7 +8,7 @@ try {
 
 
 /* =====================================================================
-   CATALOGO DELLE LEZIONI (Day)
+   CATALOGO DEI DAY
    Per aggiungere un nuovo giorno:
    1. duplica appunti/_template-day.html e rinominalo (es. day-04.html);
    2. aggiungi qui sotto una nuova voce con n, title e file.
@@ -21,61 +21,21 @@ var days = [
     n: 1,
     title: 'Rappresentazione dell\u2019informazione e sistemi di numerazione',
     file: 'appunti/day-01.html'
-  },
-  {
-    n: 2,
-    title: 'Elaborazione dell\u2019informazione',
-    file: 'appunti/day-02.html'
   }
 ];
 days.sort(function (a, b) { return a.n - b.n; });
-
-
-/* =====================================================================
-   CATALOGO DELLE ESERCITAZIONI
-   Stessa procedura dei Day: duplica appunti/_template-day.html, rinominalo
-   (es. esercitazione-1.html) e aggiungi qui una voce. L'etichetta
-   "Esercitazione N" sopra il titolo è generata da JavaScript.
-   ===================================================================== */
-var esercitazioni = [
-  // {
-  //   n: 1,
-  //   title: 'Titolo dell\u2019esercitazione 1',
-  //   file: 'appunti/esercitazione-1.html'
-  // }
-];
-esercitazioni.sort(function (a, b) { return a.n - b.n; });
-
-
-/* =====================================================================
-   SEZIONI
-   name   = nome mostrato nel menu della barra in alto
-   label  = parola sopra il titolo ("Day 3", "Esercitazione 2")
-   prefix = prefisso dell'hash URL (#day-3, #es-2)
-   list   = catalogo corrispondente
-   key    = chiave localStorage dell'ultimo elemento letto
-   ===================================================================== */
-var cats = {
-  lezioni:       { name: 'Lezioni',       label: 'Day',           prefix: 'day', list: days,          key: 'a1-day' },
-  esercitazioni: { name: 'Esercitazioni', label: 'Esercitazione', prefix: 'es',  list: esercitazioni, key: 'a1-es'  }
-};
-var catOrder = ['lezioni', 'esercitazioni'];
 
 
 document.addEventListener('DOMContentLoaded', function () {
   var $ = function (id) { return document.getElementById(id); };
   var root = document.documentElement;
   var main = $('content'), menu = $('dayMenu'), dotsBtn = $('dotsBtn');
-  var modeBtn = $('modeBtn'), modeMenu = $('modeMenu');
   var prevBtn = $('prevBtn'), nextBtn = $('nextBtn');
   var aaBtn = $('aaBtn'), settings = $('settings');
   var nav = $('navBar');
-  var mode = 'lezioni';   /* sezione corrente: 'lezioni' oppure 'esercitazioni' */
   var cur = 0;
   var requestId = 0;   /* per ignorare risposte fetch "vecchie" se cambio Day velocemente */
   var cache = {};      /* file già scaricati: evita di riscaricarli */
-
-  function items() { return cats[mode].list; }
 
   function store(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -89,39 +49,22 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  /* ---------- Hash URL: #day-N (lezioni), #es-N (esercitazioni) ---------- */
-  /* Restituisce {mode, idx} oppure null. idx = -1 se manca il numero o non esiste nel catalogo. */
-  function parseHash() {
-    for (var k = 0; k < catOrder.length; k++) {
-      var md = catOrder[k], c = cats[md];
-      var m = new RegExp('^#' + c.prefix + '(?:-(\\d+))?$').exec(location.hash);
-      if (!m) continue;
-      var idx = -1;
-      if (m[1] !== undefined) {
-        var n = parseInt(m[1], 10);
-        c.list.forEach(function (d, j) { if (d.n === n) idx = j; });
-      }
-      return { mode: md, idx: idx };
-    }
-    return null;
+  /* ---------- Hash URL: #day-1, #day-2, ... ---------- */
+  function dayFromHash() {
+    var m = /^#day-(\d+)$/.exec(location.hash);
+    if (!m) return -1;
+    var n = parseInt(m[1], 10), idx = -1;
+    days.forEach(function (d, k) { if (d.n === n) idx = k; });
+    return idx;
   }
-  function syncHash(n, push) {
-    var h = '#' + cats[mode].prefix + (n !== null ? '-' + n : '');
+  function syncHash(d, push) {
+    var h = '#day-' + d.n;
     if (location.hash === h) return;
     try {
       if (push) history.pushState(null, '', h); else history.replaceState(null, '', h);
     } catch (e) {
       location.hash = h;
     }
-  }
-
-  /* Indice dell'ultimo elemento letto della sezione (0 se non c'è o non esiste più) */
-  function startIndex(md) {
-    var list = cats[md].list;
-    var want = parseInt(load(cats[md].key), 10);
-    var idx = 0;
-    if (want) list.forEach(function (d, k) { if (d.n === want) idx = k; });
-    return idx;
   }
 
   /* ---------- Caricamento del file di una giornata ---------- */
@@ -155,49 +98,28 @@ document.addEventListener('DOMContentLoaded', function () {
     var f = document.createElement('strong');
     f.textContent = d.file;
     p1.appendChild(f);
-    p1.appendChild(document.createTextNode('. Controlla che esista e che il percorso nel catalogo sia corretto, poi riprova.'));
+    p1.appendChild(document.createTextNode('. Controlla che esista e che il percorso nel catalogo dei Day sia corretto, poi riprova.'));
     var p2 = document.createElement('p');
     p2.textContent = 'Se hai aperto index.html con doppio click (file://), il browser blocca il caricamento: usa GitHub Pages oppure un server locale come Live Server.';
     box.appendChild(bt); box.appendChild(p1); box.appendChild(p2);
     main.appendChild(box);
   }
 
-  /* Sezione senza appunti */
-  function showEmpty(animate, pushHash) {
-    cur = 0;
-    ++requestId;   /* annulla eventuali fetch ancora in corso */
-
-    main.innerHTML = '<p class="eyebrow"></p><h1></h1><p></p>';
-    main.querySelector('.eyebrow').textContent = cats[mode].name;
-    main.querySelector('h1').textContent = 'Nessun appunto per ora';
-    main.querySelector('p:last-child').textContent = 'In questa sezione non è ancora stato aggiunto nulla: quando ci saranno degli appunti, li troverai qui.';
-    main.removeAttribute('aria-busy');
-
-    if (animate) { main.classList.remove('fade'); void main.offsetWidth; main.classList.add('fade'); }
-    window.scrollTo(0, 0);
-    syncHash(null, pushHash);
-    updateNav();
-  }
-
   function show(i, animate, pushHash) {
-    var list = items();
-    if (!list.length) { showEmpty(animate, pushHash); return; }
-
-    cur = Math.max(0, Math.min(list.length - 1, i));
-    var d = list[cur];
+    cur = Math.max(0, Math.min(days.length - 1, i));
+    var d = days[cur];
     var myRequest = ++requestId;
 
     /* titolo subito visibile, poi stato di caricamento */
-    main.innerHTML = '<p class="eyebrow"></p><h1></h1>';
-    main.querySelector('.eyebrow').textContent = cats[mode].label + ' ' + d.n;
+    main.innerHTML = '<p class="eyebrow">Day ' + d.n + '</p><h1></h1>';
     main.querySelector('h1').textContent = d.title;
     main.setAttribute('aria-busy', 'true');
     showLoading();
 
     if (animate) { main.classList.remove('fade'); void main.offsetWidth; main.classList.add('fade'); }
     window.scrollTo(0, 0);
-    store(cats[mode].key, d.n);
-    syncHash(d.n, pushHash);
+    store('fdi-day', d.n);
+    syncHash(d, pushHash);
     updateNav();
 
     fetchDay(d).then(function (html) {
@@ -218,31 +140,15 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function updateNav() {
-    var list = items();
-    var empty = list.length === 0;
-    var label = cats[mode].label;
-
     dotsBtn.innerHTML = '';
-    if (empty) {
-      /* navigatore disabilitato: un solo pallino spento */
-      var sp0 = document.createElement('span');
-      sp0.className = 'dot';
-      dotsBtn.appendChild(sp0);
-      dotsBtn.setAttribute('aria-label', 'Nessun appunto disponibile in ' + cats[mode].name);
-    } else {
-      list.forEach(function (d, k) {
-        var sp = document.createElement('span');
-        sp.className = 'dot' + (k === cur ? ' on' : '');
-        dotsBtn.appendChild(sp);
-      });
-      dotsBtn.setAttribute('aria-label', 'Scegli ' + (mode === 'lezioni' ? 'il ' : 'l\u2019') + label + ', ora ' + label + ' ' + list[cur].n);
-    }
-    dotsBtn.disabled = empty;
-    prevBtn.disabled = empty || cur === 0;
-    nextBtn.disabled = empty || cur === list.length - 1;
-    prevBtn.setAttribute('aria-label', label + ' precedente');
-    nextBtn.setAttribute('aria-label', label + ' successivo');
-
+    days.forEach(function (d, k) {
+      var sp = document.createElement('span');
+      sp.className = 'dot' + (k === cur ? ' on' : '');
+      dotsBtn.appendChild(sp);
+    });
+    dotsBtn.setAttribute('aria-label', 'Scegli il Day, ora Day ' + days[cur].n);
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === days.length - 1;
     Array.prototype.forEach.call(menu.children, function (btn, k) {
       btn.classList.toggle('cur', k === cur);
       btn.querySelector('.mk').textContent = k === cur ? '●' : '○';
@@ -252,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function buildMenu() {
     menu.innerHTML = '';
-    items().forEach(function (d, k) {
+    days.forEach(function (d, k) {
       var b = document.createElement('button');
       b.className = 'day-item';
       b.setAttribute('role', 'menuitem');
@@ -262,58 +168,24 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  /* ---------- Cambio di sezione ---------- */
-  function buildModeMenu() {
-    modeMenu.innerHTML = '';
-    catOrder.forEach(function (md) {
-      var b = document.createElement('button');
-      b.className = 'day-item' + (md === mode ? ' cur' : '');
-      b.setAttribute('role', 'menuitem');
-      if (md === mode) b.setAttribute('aria-current', 'true');
-      var mk = document.createElement('span');
-      mk.className = 'mk';
-      mk.textContent = md === mode ? '●' : '○';
-      var name = document.createElement('span');
-      name.textContent = cats[md].name;
-      b.appendChild(mk); b.appendChild(name);
-      b.addEventListener('click', function () {
-        closeAll();
-        if (md !== mode) switchMode(md, true);
-      });
-      modeMenu.appendChild(b);
-    });
-  }
-
-  function switchMode(md, push, idx) {
-    mode = md;
-    store('a1-mode', md);
-    buildModeMenu();
-    buildMenu();
-    show(idx !== undefined && idx !== -1 ? idx : startIndex(md), true, push);
-  }
-
   function setOpen(panel, btn, open) { panel.hidden = !open; btn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
-  function closeAll() { setOpen(menu, dotsBtn, false); setOpen(settings, aaBtn, false); setOpen(modeMenu, modeBtn, false); }
+  function closeAll() { setOpen(menu, dotsBtn, false); setOpen(settings, aaBtn, false); }
 
   dotsBtn.addEventListener('click', function () { var open = menu.hidden; closeAll(); setOpen(menu, dotsBtn, open); });
   aaBtn.addEventListener('click', function () { var open = settings.hidden; closeAll(); setOpen(settings, aaBtn, open); });
-  modeBtn.addEventListener('click', function () { var open = modeMenu.hidden; closeAll(); setOpen(modeMenu, modeBtn, open); });
-  document.addEventListener('click', function (e) { if (!e.target.closest('.day-menu, .dots, .settings, .aa, .mode-menu, .brand-btn')) closeAll(); });
+  document.addEventListener('click', function (e) { if (!e.target.closest('.day-menu, .dots, .settings, .aa')) closeAll(); });
   prevBtn.addEventListener('click', function () { show(cur - 1, true, true); });
   nextBtn.addEventListener('click', function () { show(cur + 1, true, true); });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeAll();
-    else if (!items().length) return;
     else if (e.key === 'ArrowLeft' && !e.metaKey && !e.altKey) show(cur - 1, true, true);
     else if (e.key === 'ArrowRight' && !e.metaKey && !e.altKey) show(cur + 1, true, true);
   });
 
   /* Back/forward del browser o modifica manuale dell'hash */
   window.addEventListener('hashchange', function () {
-    var h = parseHash();
-    if (!h) return;
-    if (h.mode !== mode) switchMode(h.mode, false, h.idx);
-    else if (h.idx !== -1 && h.idx !== cur) show(h.idx, true, false);
+    var idx = dayFromHash();
+    if (idx !== -1 && idx !== cur) show(idx, true, false);
   });
 
   /* ---------- Navigatore che si rimpicciolisce scorrendo ---------- */
@@ -356,16 +228,16 @@ document.addEventListener('DOMContentLoaded', function () {
     b.addEventListener('click', function () { applyTheme(b.dataset.themeBtn); });
   });
 
-  /* ---------- Avvio: hash URL > ultima sezione salvata > lezioni ---------- */
+  /* ---------- Avvio: hash URL > ultimo Day salvato > primo Day ---------- */
   applyZoom();
   applyTheme(root.getAttribute('data-theme') || 'light');
-
-  var h0 = parseHash();
-  var savedMode = load('a1-mode');
-  mode = h0 ? h0.mode : (savedMode && cats.hasOwnProperty(savedMode) ? savedMode : 'lezioni');
-
-  buildModeMenu();
   buildMenu();
-  show(h0 && h0.idx !== -1 ? h0.idx : startIndex(mode), false, false);
+  var start = dayFromHash();
+  if (start === -1) {
+    var want = parseInt(load('fdi-day'), 10) || days[0].n;
+    start = 0;
+    days.forEach(function (d, k) { if (d.n === want) start = k; });
+  }
+  show(start, false, false);
   if (!window.renderMathInElement) window.addEventListener('load', renderMath);
 });

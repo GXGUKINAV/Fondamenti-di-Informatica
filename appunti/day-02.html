@@ -1,0 +1,470 @@
+<h2>1. Algoritmi e programmi</h2>
+<div class="box def">
+<div class="bt">Algoritmo</div>
+<p>Un <strong>algoritmo</strong> è una sequenza di passi elementari, ben definita e precisa, eventualmente eseguibile anche da una macchina. Il lavoro dell'informatica consiste nello scomporre un'elaborazione complessa in operazioni semplici, per poi combinarle nel modo corretto.</p>
+</div>
+<p>Bisogna distinguere due aspetti:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Concetto</th><th>Significato</th></tr></thead>
+<tbody>
+<tr><td>Algoritmo</td><td>La soluzione concettuale al problema: quali passi servono e in quale ordine</td></tr>
+<tr><td>Programma</td><td>La realizzazione dell'algoritmo mediante un determinato linguaggio</td></tr>
+</tbody>
+</table>
+</div>
+<p>Prima si ragiona sulla soluzione, poi si scrive il codice. Un algoritmo sbagliato non diventa corretto scegliendo un linguaggio migliore; viceversa, un algoritmo corretto può essere implementato male.</p>
+
+<h3>Le qualità di una buona soluzione</h3>
+<ul>
+<li><strong>Precisione.</strong> Ogni istruzione deve avere un significato non ambiguo. Una ricetta può dire &laquo;sale quanto basta&raquo;, perché si affida all'esperienza di chi cucina; una macchina, invece, ha bisogno che il comportamento richiesto sia descritto esplicitamente.</li>
+<li><strong>Completezza.</strong> La soluzione deve considerare tutti i casi ammessi dal problema, non soltanto quello più comodo. Nell'esempio dei coefficienti $a,b,c$ di un'equazione, non possiamo supporli tutti diversi da zero se la traccia non lo specifica: se $a=0$ il problema non è più quello di un'equazione di secondo grado.</li>
+<li><strong>Correttezza.</strong> Non basta che il programma venga eseguito: deve produrre il risultato richiesto. &laquo;Non si blocca&raquo; e &laquo;risolve il problema&raquo; non sono la stessa cosa.</li>
+<li><strong>Ragionevolezza.</strong> Il professore non richiede necessariamente la soluzione ottima, ma vuole evitare codice inutilmente lungo, ripetitivo o ridondante. Nel corso non si affronta ancora la complessità matematica degli algoritmi: si valuta soprattutto se la soluzione è sensata.</li>
+</ul>
+<p>La <strong>rappresentazione dei dati</strong> influenza anche l'algoritmo. Un numero di telefono, per esempio, è più sensato trattarlo come sequenza di caratteri (una stringa) se bisogna conservarne gli zeri iniziali: rappresentarlo come numero farebbe perdere quell'informazione.</p>
+<div class="box thm">
+<div class="bt">Idea centrale della lezione</div>
+<p>capire il problema &rarr; progettare l'algoritmo &rarr; scrivere il programma &rarr; verificarlo.</p>
+</div>
+
+<h2>2. La macchina didattica</h2>
+<p>Per capire come avviene l'elaborazione, il corso usa una versione didattica della <strong>macchina di von Neumann</strong> e un linguaggio simile a un assembler semplificato. Le istruzioni e le convenzioni descritte qui riguardano questo modello del corso, non tutti gli assembler reali.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Componente</th><th>Funzione</th></tr></thead>
+<tbody>
+<tr><td>Nastro di lettura</td><td>Fornisce i dati in ingresso, uno alla volta</td></tr>
+<tr><td>Nastro di scrittura</td><td>Riceve i risultati in uscita, uno alla volta</td></tr>
+<tr><td>Unità centrale</td><td>Esegue le operazioni previste dal programma</td></tr>
+<tr><td>ALU</td><td>Unità aritmetico-logica: esegue le operazioni di calcolo</td></tr>
+<tr><td>Accumulatore</td><td>Piccola memoria interna utilizzata per dati e risultati delle operazioni</td></tr>
+<tr><td>Memoria</td><td>Insieme di celle nelle quali conservare valori da riutilizzare</td></tr>
+</tbody>
+</table>
+</div>
+<p>L'<strong>accumulatore</strong> è il punto di passaggio fondamentale: le letture, le scritture e le operazioni aritmetiche del linguaggio ruotano intorno al suo contenuto. La memoria esterna all'unità centrale permette di conservare informazioni mentre l'accumulatore viene riutilizzato.</p>
+<p>Nella spiegazione del professore, la memoria di lavoro viene collegata alla <strong>RAM</strong>, distinta dalla memoria persistente del disco: la prima serve durante l'elaborazione e perde il contenuto allo spegnimento, mentre la seconda conserva i dati.</p>
+
+<h3>Convenzioni</h3>
+<ul>
+<li>Le istruzioni del programma sono numerate a partire da $0$.</li>
+<li>Normalmente si eseguono in ordine, passando alla riga successiva.</li>
+<li>Un'istruzione contiene un codice operativo e, quando previsto, un solo operando esplicito. Il codice operativo indica <em>che cosa</em> fare; l'operando indica <em>su che cosa</em> operare.</li>
+<li>Nel modello usato negli esercizi si ignorano i problemi di overflow.</li>
+<li>Le divisioni sono <strong>intere</strong>: nell'esempio della lezione, $7/2$ produce $3$.</li>
+<li><code>END</code> indica la fine del programma.</li>
+</ul>
+<p>Abbreviazioni usate per descrivere le istruzioni:</p>
+<ul>
+<li><code>ACC</code>: contenuto dell'accumulatore;</li>
+<li><code>M[x]</code>: contenuto della cella di memoria con indirizzo $x$.</li>
+</ul>
+<div class="box thm">
+<div class="bt">La regola più importante</div>
+<p>Leggere un valore significa <strong>copiarlo</strong>, non cancellarlo dalla sorgente. Il vecchio contenuto della <strong>destinazione</strong>, invece, viene sovrascritto.</p>
+</div>
+<div class="box ex">
+<div class="bt">Esempio &mdash; LOAD e STORE</div>
+<ul>
+<li><code>LOAD 100</code> copia <code>M[100]</code> nell'accumulatore. La cella 100 non cambia, ma il vecchio valore di <code>ACC</code> viene perso.</li>
+<li><code>STORE 100</code> copia <code>ACC</code> nella cella 100. L'accumulatore non cambia, ma il precedente contenuto di <code>M[100]</code> viene perso.</li>
+</ul>
+</div>
+
+<h2>3. Istruzioni e indirizzamenti</h2>
+<h3>Trasferimento dei dati</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Istruzione</th><th>Effetto</th></tr></thead>
+<tbody>
+<tr><td><code>READ</code></td><td>Legge il prossimo dato dal nastro di ingresso e lo mette in ACC</td></tr>
+<tr><td><code>WRITE</code></td><td>Scrive ACC sul nastro di uscita</td></tr>
+<tr><td><code>LOAD x</code></td><td>$\text{ACC}\leftarrow M[x]$</td></tr>
+<tr><td><code>STORE x</code></td><td>$M[x]\leftarrow \text{ACC}$</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>READ</code> fa avanzare la posizione di lettura: due <code>READ</code> consecutivi leggono due dati diversi. <code>WRITE</code> fa avanzare la posizione di scrittura senza modificare l'accumulatore: due <code>WRITE</code> consecutivi, se ACC non cambia, stampano due volte lo stesso valore.</p>
+<div class="box warn">
+<div class="bt">READ e WRITE non hanno operandi</div>
+<p>Nel linguaggio del corso <code>READ 100</code> e <code>WRITE 100</code> <strong>non sono istruzioni valide</strong>, anche se il simulatore realizzato da un ex studente potrebbe accettarle. Per stampare una cella bisogna prima caricarla nell'accumulatore:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Riga</th><th>Istruzione</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><code>LOAD 100</code></td></tr>
+<tr><td>1</td><td><code>WRITE</code></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<h3>Operazioni aritmetiche</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Istruzione</th><th>Effetto</th></tr></thead>
+<tbody>
+<tr><td><code>ADD x</code></td><td>$\text{ACC}\leftarrow \text{ACC}+M[x]$</td></tr>
+<tr><td><code>SUB x</code></td><td>$\text{ACC}\leftarrow \text{ACC}-M[x]$</td></tr>
+<tr><td><code>MULT x</code></td><td>$\text{ACC}\leftarrow \text{ACC}\times M[x]$</td></tr>
+<tr><td><code>DIV x</code></td><td>$\text{ACC}\leftarrow \text{ACC}/M[x]$, con divisione intera</td></tr>
+</tbody>
+</table>
+</div>
+<p>Il risultato finisce <strong>sempre nell'accumulatore</strong>, non nella cella indicata. Inoltre l'accumulatore è sempre il <strong>primo operando</strong>: <code>SUB 100</code> calcola $\text{ACC}-M[100]$, non il contrario. Lo stesso ordine è importante nella divisione.</p>
+<p>Per aggiornare un valore in memoria, lo schema generale è:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Riga</th><th>Istruzione</th><th>Significato</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><code>LOAD 100</code></td><td>carica il valore</td></tr>
+<tr><td>1</td><td><code>ADD= 1</code></td><td>lo modifica nell'accumulatore</td></tr>
+<tr><td>2</td><td><code>STORE 100</code></td><td>salva il risultato nella cella</td></tr>
+</tbody>
+</table>
+</div>
+<p>Se il valore è già in ACC, il caricamento può essere superfluo.</p>
+
+<h3>I tre indirizzamenti</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Tipo</th><th>Esempio</th><th>Significato</th></tr></thead>
+<tbody>
+<tr><td>Diretto</td><td><code>LOAD 102</code></td><td>Carica il contenuto della cella 102</td></tr>
+<tr><td>Immediato</td><td><code>LOAD= 102</code></td><td>Carica direttamente il numero 102</td></tr>
+<tr><td>Indiretto</td><td><code>LOAD@ 102</code></td><td>Carica il contenuto della cella il cui indirizzo è conservato nella cella 102</td></tr>
+</tbody>
+</table>
+</div>
+<p>Le slide usano <code>=</code> per l'indirizzamento immediato e <code>@</code> per quello indiretto.</p>
+<div class="box ex">
+<div class="bt">Esempio &mdash; i tre indirizzamenti</div>
+<p>Supponiamo che $M[102]=110$ e $M[110]=248$.</p>
+<ul>
+<li><code>LOAD= 102</code> &rarr; ACC contiene $102$;</li>
+<li><code>LOAD 102</code> &rarr; ACC contiene $110$;</li>
+<li><code>LOAD@ 102</code> &rarr; ACC contiene $248$.</li>
+</ul>
+<p>L'indirizzamento indiretto introduce un passaggio aggiuntivo: la cella 102 contiene 110, e la cella 110 contiene 248. Con <code>STORE@ 102</code>, invece, il valore di ACC viene scritto nella <strong>cella 110</strong>, perché 110 è l'indirizzo conservato in 102.</p>
+</div>
+<p>L'indirizzamento immediato è previsto per <code>LOAD</code> e per le quattro operazioni aritmetiche. Per esempio, <code>ADD= 13</code> aggiunge il numero 13, mentre <code>ADD 13</code> aggiunge il contenuto della cella 13. <strong>Non</strong> si usa con <code>STORE</code>, <code>READ</code> o <code>WRITE</code>.</p>
+<div class="box warn">
+<div class="bt">Celle non inizializzate</div>
+<p>Non si deve presumere che una cella mai utilizzata contenga zero: se serve un valore iniziale preciso, bisogna scriverlo esplicitamente.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Riga</th><th>Istruzione</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><code>LOAD= 0</code></td></tr>
+<tr><td>1</td><td><code>STORE 102</code></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<h3>Salti e condizioni</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Istruzione</th><th>Quando salta alla riga $r$</th></tr></thead>
+<tbody>
+<tr><td><code>BR r</code></td><td>Sempre</td></tr>
+<tr><td><code>BEQ r</code></td><td>Se $\text{ACC}=0$</td></tr>
+<tr><td><code>BG r</code></td><td>Se $\text{ACC}\gt 0$</td></tr>
+<tr><td><code>BGE r</code></td><td>Se $\text{ACC}\ge 0$</td></tr>
+<tr><td><code>BL r</code></td><td>Se $\text{ACC}\lt 0$</td></tr>
+<tr><td><code>BLE r</code></td><td>Se $\text{ACC}\le 0$</td></tr>
+</tbody>
+</table>
+</div>
+<p>Se la condizione non è verificata, l'esecuzione continua dalla riga successiva. L'operando del salto è una <strong>riga del programma</strong>, non una cella contenente un dato.</p>
+<p>Le condizioni confrontano <strong>solo l'accumulatore con zero</strong>. Per verificare se $M[100]$ è maggiore di $48$, bisogna quindi calcolare la differenza:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Riga</th><th>Istruzione</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><code>LOAD 100</code></td></tr>
+<tr><td>1</td><td><code>SUB= 48</code></td></tr>
+<tr><td>2</td><td><code>BG r</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Se la differenza è positiva, il valore iniziale era maggiore di 48; se è zero, era uguale; se è negativa, era minore.</p>
+<div class="box warn">
+<div class="bt">Attenzione</div>
+<p>La sottrazione modifica ACC: l'eventuale valore originale va conservato (con uno <code>STORE</code>) se serve ancora.</p>
+</div>
+<p>I salti permettono di realizzare sia <strong>scelte</strong> fra comportamenti diversi sia <strong>cicli</strong>, tornando a istruzioni già eseguite. Non bisogna copiare dieci volte lo stesso blocco di codice per elaborare dieci dati.</p>
+
+<h2>4. Programmi della lezione</h2>
+
+<h3>Invertire due numeri</h3>
+<p><strong>Obiettivo:</strong> leggere due valori e stampare prima il secondo, poi il primo. Il primo deve essere salvato prima della seconda lettura, altrimenti viene sovrascritto nell'accumulatore.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Riga</th><th>Istruzione</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><code>READ</code></td></tr>
+<tr><td>1</td><td><code>STORE 30</code></td></tr>
+<tr><td>2</td><td><code>READ</code></td></tr>
+<tr><td>3</td><td><code>WRITE</code></td></tr>
+<tr><td>4</td><td><code>LOAD 30</code></td></tr>
+<tr><td>5</td><td><code>WRITE</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Con ingresso $7, 5$, l'uscita è $5, 7$. La cella 30 conserva il primo valore mentre l'accumulatore viene usato per il secondo.</p>
+
+<h3>Sommare due numeri</h3>
+<p>La struttura iniziale è la stessa, ma dopo la seconda lettura si somma il valore salvato in memoria.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Riga</th><th>Istruzione</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><code>READ</code></td></tr>
+<tr><td>1</td><td><code>STORE 30</code></td></tr>
+<tr><td>2</td><td><code>READ</code></td></tr>
+<tr><td>3</td><td><code>ADD 30</code></td></tr>
+<tr><td>4</td><td><code>WRITE</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Non serve salvare anche il secondo numero: si trova già nell'accumulatore quando viene eseguita la somma.</p>
+
+<h3>Sommare $n$ numeri</h3>
+<p>Il primo dato in ingresso indica <strong>quanti numeri</strong> devono essere letti. Le celle utilizzate sono:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Cella</th><th>Significato</th></tr></thead>
+<tbody>
+<tr><td>101</td><td>Quanti numeri restano da leggere</td></tr>
+<tr><td>102</td><td>Somma dei numeri letti finora</td></tr>
+</tbody>
+</table>
+</div>
+<div class="tbl">
+<table>
+<thead><tr><th>Riga</th><th>Istruzione</th><th>Commento</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><code>READ</code></td><td>legge $n$</td></tr>
+<tr><td>1</td><td><code>STORE 101</code></td><td>$n$ diventa il contatore</td></tr>
+<tr><td>2</td><td><code>LOAD= 0</code></td><td></td></tr>
+<tr><td>3</td><td><code>STORE 102</code></td><td>somma iniziale $=0$</td></tr>
+<tr><td>4</td><td><code>LOAD 101</code></td><td>controllo del contatore</td></tr>
+<tr><td>5</td><td><code>BEQ 13</code></td><td>se non restano numeri, vai alla stampa</td></tr>
+<tr><td>6</td><td><code>READ</code></td><td>legge un numero</td></tr>
+<tr><td>7</td><td><code>ADD 102</code></td><td>lo aggiunge alla somma</td></tr>
+<tr><td>8</td><td><code>STORE 102</code></td><td>salva la nuova somma</td></tr>
+<tr><td>9</td><td><code>LOAD 101</code></td><td></td></tr>
+<tr><td>10</td><td><code>SUB= 1</code></td><td>decrementa il contatore</td></tr>
+<tr><td>11</td><td><code>STORE 101</code></td><td></td></tr>
+<tr><td>12</td><td><code>BR 4</code></td><td>torna al controllo</td></tr>
+<tr><td>13</td><td><code>LOAD 102</code></td><td></td></tr>
+<tr><td>14</td><td><code>WRITE</code></td><td>stampa la somma</td></tr>
+<tr><td>15</td><td><code>END</code></td><td></td></tr>
+</tbody>
+</table>
+</div>
+<p>Il funzionamento è:</p>
+<ol>
+<li>leggere $n$ e salvarlo come contatore;</li>
+<li>inizializzare la somma a zero;</li>
+<li>controllare se restano numeri da leggere;</li>
+<li>leggere un numero e aggiungerlo alla somma;</li>
+<li>salvare la nuova somma;</li>
+<li>decrementare il contatore e tornare al controllo;</li>
+<li>quando il contatore vale zero, stampare la somma.</li>
+</ol>
+<div class="box ex">
+<div class="bt">Esempio &mdash; traccia con ingresso 3, 7, &minus;2, 5</div>
+<p>Il $3$ è il numero di dati da leggere e <strong>non</strong> fa parte della somma.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Momento</th><th>Numeri ancora da leggere</th><th>Somma</th></tr></thead>
+<tbody>
+<tr><td>Inizializzazione</td><td>3</td><td>0</td></tr>
+<tr><td>Dopo 7</td><td>2</td><td>7</td></tr>
+<tr><td>Dopo &minus;2</td><td>1</td><td>5</td></tr>
+<tr><td>Dopo 5</td><td>0</td><td>10</td></tr>
+</tbody>
+</table>
+</div>
+<p>L'uscita è $10$.</p>
+</div>
+<div class="box warn">
+<div class="bt">Casi limite</div>
+<ul>
+<li>Il caso $n=0$ è gestito: il programma stampa zero senza leggere altri dati.</li>
+<li>Un $n$ <strong>negativo</strong> non è gestito correttamente: decrementandolo ci si allontana da zero e il ciclo non raggiunge mai la condizione di uscita.</li>
+</ul>
+<p>L'esempio va quindi usato assumendo $n\ge 0$, oppure aggiungendo un controllo sull'ingresso.</p>
+</div>
+<p><strong>Piccola ottimizzazione</strong> discussa dal professore: alla riga 12 si può usare <code>BR 5</code> anziché <code>BR 4</code>, perché dopo <code>STORE 101</code> l'accumulatore contiene già il contatore aggiornato. La riga 4 deve comunque rimanere per il primo controllo dopo l'inizializzazione.</p>
+
+<h3>Invertire una sequenza</h3>
+<p><strong>Obiettivo:</strong> leggere numeri diversi da zero fino all'inserimento di uno zero, poi stamparli in ordine inverso. Lo zero è il <strong>terminatore</strong> e non deve essere memorizzato né stampato.</p>
+<p>Qui non basta conservare una somma: servono <strong>tutti i valori</strong> della sequenza.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Cella</th><th>Significato</th></tr></thead>
+<tbody>
+<tr><td>101</td><td>Numero di valori memorizzati, poi numero di valori ancora da stampare</td></tr>
+<tr><td>102</td><td>Indirizzo della prossima cella libera durante la lettura</td></tr>
+<tr><td>110 in avanti</td><td>Celle contenenti i valori della sequenza</td></tr>
+</tbody>
+</table>
+</div>
+<div class="tbl">
+<table>
+<thead><tr><th>Riga</th><th>Istruzione</th><th>Commento</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><code>LOAD= 0</code></td><td></td></tr>
+<tr><td>1</td><td><code>STORE 101</code></td><td>contatore $=0$</td></tr>
+<tr><td>2</td><td><code>LOAD= 110</code></td><td></td></tr>
+<tr><td>3</td><td><code>STORE 102</code></td><td>prima cella libera $=110$</td></tr>
+<tr><td>4</td><td><code>READ</code></td><td>legge un numero</td></tr>
+<tr><td>5</td><td><code>BEQ 14</code></td><td>se è il terminatore, passa alla stampa</td></tr>
+<tr><td>6</td><td><code>STORE@ 102</code></td><td>lo salva nella cella indicata da <code>M[102]</code></td></tr>
+<tr><td>7</td><td><code>LOAD 101</code></td><td></td></tr>
+<tr><td>8</td><td><code>ADD= 1</code></td><td></td></tr>
+<tr><td>9</td><td><code>STORE 101</code></td><td>incrementa il contatore</td></tr>
+<tr><td>10</td><td><code>LOAD 102</code></td><td></td></tr>
+<tr><td>11</td><td><code>ADD= 1</code></td><td></td></tr>
+<tr><td>12</td><td><code>STORE 102</code></td><td>incrementa l'indirizzo</td></tr>
+<tr><td>13</td><td><code>BR 4</code></td><td>legge il numero successivo</td></tr>
+<tr><td>14</td><td><code>LOAD 101</code></td><td>inizio della stampa</td></tr>
+<tr><td>15</td><td><code>BEQ 25</code></td><td>se non restano valori, fine</td></tr>
+<tr><td>16</td><td><code>LOAD 101</code></td><td></td></tr>
+<tr><td>17</td><td><code>SUB= 1</code></td><td></td></tr>
+<tr><td>18</td><td><code>STORE 101</code></td><td>decrementa il contatore</td></tr>
+<tr><td>19</td><td><code>LOAD 102</code></td><td></td></tr>
+<tr><td>20</td><td><code>SUB= 1</code></td><td></td></tr>
+<tr><td>21</td><td><code>STORE 102</code></td><td>decrementa l'indirizzo</td></tr>
+<tr><td>22</td><td><code>LOAD@ 102</code></td><td>carica l'ultimo valore non stampato</td></tr>
+<tr><td>23</td><td><code>WRITE</code></td><td></td></tr>
+<tr><td>24</td><td><code>BR 14</code></td><td></td></tr>
+<tr><td>25</td><td><code>END</code></td><td></td></tr>
+</tbody>
+</table>
+</div>
+<p>Durante la lettura, <code>STORE@ 102</code> salva ogni numero nella cella indicata dall'indirizzo conservato in 102. Poi si incrementano sia il contatore sia l'indirizzo, preparando la cella successiva.</p>
+<div class="box ex">
+<div class="bt">Esempio &mdash; ingresso 7, 5, 4, 0</div>
+<p>Al termine della lettura si ha:</p>
+<ul>
+<li>$M[101]=3$</li>
+<li>$M[102]=113$</li>
+<li>$M[110]=7$, $M[111]=5$, $M[112]=4$</li>
+</ul>
+<p>Prima di stampare si decrementa l'indirizzo: $113\to112$, poi $112\to111$, poi $111\to110$. L'uscita è $4, 5, 7$.</p>
+</div>
+<div class="box warn">
+<div class="bt">Punto delicato</div>
+<p>La cella 102 contiene l'indirizzo della <strong>prossima cella libera</strong>, non quello dell'ultimo valore memorizzato. Per questo, prima di stampare, bisogna <strong>decrementare</strong> l'indirizzo.</p>
+</div>
+<p>Se il primo dato letto è zero, il contatore rimane a zero e il programma termina senza stampare valori.</p>
+
+<h2>5. Esercizio d'esame e verifica</h2>
+<p>Nella parte finale il professore analizza un esercizio passato: <strong>sommare soltanto i numeri pari</strong> di una sequenza di interi positivi terminata da zero, stampando la somma quando viene letto il terminatore. &laquo;Numeri pari&raquo; significa valori divisibili per due, non numeri che occupano una posizione pari nella sequenza.</p>
+
+<h3>Come riconoscere un numero pari</h3>
+<p>Il linguaggio non dispone di un'istruzione per calcolare direttamente il resto. Si procede quindi così:</p>
+<ol>
+<li>conservare il valore originale $x$;</li>
+<li>dividerlo per due con divisione intera;</li>
+<li>moltiplicare il risultato per due;</li>
+<li>sottrarre il valore originale.</li>
+</ol>
+<p>Per i numeri positivi dell'esercizio:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Valore</th><th>Divisione intera per 2</th><th>Moltiplicazione per 2</th><th>Differenza dall'originale</th></tr></thead>
+<tbody>
+<tr><td>8</td><td>4</td><td>8</td><td>0: pari</td></tr>
+<tr><td>7</td><td>3</td><td>6</td><td>&minus;1: dispari</td></tr>
+</tbody>
+</table>
+</div>
+<div class="box warn">
+<div class="bt">L'ordine è essenziale</div>
+<p>Bisogna prima <strong>dividere</strong> e poi <strong>moltiplicare</strong>. Moltiplicare per due e successivamente dividere per due restituirebbe il valore iniziale anche per un numero dispari.</p>
+</div>
+
+<h3>Soluzione</h3>
+<p>Le celle usate sono 101 per il numero originale e 102 per la somma.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Riga</th><th>Istruzione</th><th>Commento</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><code>LOAD= 0</code></td><td>Inizializza la somma</td></tr>
+<tr><td>1</td><td><code>STORE 102</code></td><td></td></tr>
+<tr><td>2</td><td><code>READ</code></td><td>Legge il prossimo numero</td></tr>
+<tr><td>3</td><td><code>BEQ 13</code></td><td>Se è zero, passa alla stampa</td></tr>
+<tr><td>4</td><td><code>STORE 101</code></td><td>Conserva il numero originale</td></tr>
+<tr><td>5</td><td><code>DIV= 2</code></td><td></td></tr>
+<tr><td>6</td><td><code>MULT= 2</code></td><td></td></tr>
+<tr><td>7</td><td><code>SUB 101</code></td><td>Risultato: 0 se pari, &minus;1 se dispari</td></tr>
+<tr><td>8</td><td><code>BL 2</code></td><td>Se dispari, legge il numero successivo</td></tr>
+<tr><td>9</td><td><code>LOAD 101</code></td><td>Recupera il numero pari originale</td></tr>
+<tr><td>10</td><td><code>ADD 102</code></td><td></td></tr>
+<tr><td>11</td><td><code>STORE 102</code></td><td>Aggiorna la somma</td></tr>
+<tr><td>12</td><td><code>BR 2</code></td><td></td></tr>
+<tr><td>13</td><td><code>LOAD 102</code></td><td></td></tr>
+<tr><td>14</td><td><code>WRITE</code></td><td></td></tr>
+<tr><td>15</td><td><code>END</code></td><td></td></tr>
+</tbody>
+</table>
+</div>
+<p>I commenti spiegano il codice; non sono istruzioni aggiuntive della macchina.</p>
+<div class="box ex">
+<div class="bt">Esempio &mdash; ingresso 7, 8, 3, 2, 0</div>
+<p>Si sommano soltanto $8$ e $2$, ottenendo $10$. Il numero originale va salvato perché il controllo di parità modifica l'accumulatore.</p>
+</div>
+
+<h3>Che cosa memorizzare</h3>
+<p>Una delle raccomandazioni principali della lezione è conservare <strong>soltanto ciò che serve</strong> all'algoritmo:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Problema</th><th>Informazioni da conservare</th></tr></thead>
+<tbody>
+<tr><td>Sommare una sequenza</td><td>Somma parziale; eventualmente contatore</td></tr>
+<tr><td>Sommare soltanto i pari</td><td>Somma parziale e valore originale durante il controllo</td></tr>
+<tr><td>Stampare una sequenza al contrario</td><td>Tutti i valori, più contatore e indirizzo</td></tr>
+</tbody>
+</table>
+</div>
+<p>Leggere una sequenza non implica automaticamente doverla memorizzare tutta. Per una somma sarebbe ridondante; per l'inversione è necessario.</p>
+
+<h2>6. Errori da evitare e controlli prima di consegnare</h2>
+<div class="box warn">
+<div class="bt">Checklist</div>
+<ul>
+<li>Verifica che ogni cella sia <strong>inizializzata</strong> prima di usarne il contenuto.</li>
+<li>Controlla che una nuova <code>READ</code> o <code>LOAD</code> non distrugga un valore ancora necessario.</li>
+<li>Ricorda che i risultati aritmetici vanno in ACC: per aggiornare la memoria serve <code>STORE</code>.</li>
+<li>Controlla l'<strong>ordine degli operandi</strong> di sottrazioni e divisioni.</li>
+<li>Distingui <code>LOAD x</code>, <code>LOAD= x</code> e <code>LOAD@ x</code>.</li>
+<li>Verifica che i salti arrivino alle righe corrette.</li>
+<li>Controlla che contatori e indirizzi vengano aggiornati e che il ciclo possa terminare.</li>
+<li>Prova i <strong>casi limite</strong>, come zero numeri da leggere o terminatore inserito subito.</li>
+<li>Evita istruzioni inventate e blocchi copiati molte volte.</li>
+<li>Numera le righe, dichiara il significato delle celle e commenta i passaggi importanti.</li>
+</ul>
+</div>
+<p>Per verificare il codice su carta, segui l'esecuzione annotando riga corrente, accumulatore, celle utilizzate e uscita: è lo stesso tipo di ragionamento passo-passo usato dal professore per spiegare l'inversione della sequenza.</p>
+<div class="box warn">
+<div class="bt">Indicazioni sul tema d'esame mostrato</div>
+<p>Nell'esempio d'esame commentato, il professore indica una <strong>penalizzazione</strong> per la mancata descrizione delle celle e per l'assenza dei commenti. Nel tema mostrato del 9 settembre 2026 erano consentiti libri e appunti cartacei, ma non dispositivi elettronici, e il tempo era di due ore: sono indicazioni del tema illustrato, non una garanzia che tutti i futuri appelli saranno identici.</p>
+</div>
+
+<h2>7. Riepilogo finale</h2>
+<p>Cosa devi saper fare dopo questo Day:</p>
+<ul>
+<li>distinguere <strong>algoritmo</strong> e <strong>programma</strong>, e valutare una soluzione per precisione, completezza, correttezza e ragionevolezza;</li>
+<li>descrivere la macchina didattica (nastri, ACC, memoria) e le convenzioni del linguaggio;</li>
+<li>usare correttamente <code>READ</code>, <code>WRITE</code>, <code>LOAD</code>, <code>STORE</code>, le quattro operazioni e i salti condizionati;</li>
+<li>distinguere indirizzamento <strong>diretto</strong>, <strong>immediato</strong> e <strong>indiretto</strong>;</li>
+<li>scrivere cicli con contatore e con terminatore, anche usando l'indirizzamento indiretto per memorizzare sequenze;</li>
+<li>riconoscere un numero pari con divisione e moltiplicazione;</li>
+<li>verificare un programma su carta, casi limite compresi.</li>
+</ul>
