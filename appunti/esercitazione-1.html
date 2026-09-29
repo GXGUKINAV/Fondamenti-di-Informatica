@@ -1,0 +1,418 @@
+<h2>1. Introduzione</h2>
+<p>Questa esercitazione mette in pratica quanto visto a lezione nel Day 1: <strong>bit e codifiche</strong>, <strong>cambi di base</strong>, <strong>interi con segno</strong>, <strong>somme e overflow</strong> e, infine, <strong>numeri frazionari</strong> con lo standard <strong>IEEE 754</strong>. Il filo conduttore è sempre lo stesso: una sequenza di bit, da sola, non significa nulla; serve conoscere la codifica.</p>
+
+<h2>2. Bit e codifiche</h2>
+<div class="box def">
+<div class="bt">Bit e byte</div>
+<ul>
+<li>Un <strong>bit</strong> vale 0 oppure 1 (falso/vero, spento/acceso).</li>
+<li>Un <strong>byte</strong> è composto da 8 bit.</li>
+<li>Con $n$ bit si costruiscono $2^n$ configurazioni diverse.</li>
+</ul>
+</div>
+<p>Con 3 bit le configurazioni sono <code>000 001 010 011 100 101 110 111</code>: 8 configurazioni che, lette come naturali, vanno da 0 a 7. Bisogna quindi distinguere:</p>
+$$\text{Numero di configurazioni}=2^n, \qquad \text{Massimo naturale rappresentabile}=2^n-1.$$
+<p>Non c'è contraddizione: anche lo zero occupa una configurazione. Con un byte si rappresentano 256 naturali, da 0 a 255.</p>
+
+<h3>Quanti bit servono?</h3>
+<p>Per rappresentare $K$ simboli diversi con codici tutti della stessa lunghezza serve il minimo intero $n$ tale che $2^n\geq K$, cioè</p>
+$$n=\left\lceil\log_2 K\right\rceil.$$
+<div class="box ex">
+<div class="bt">Esempio &mdash; alfabeto di 195 simboli</div>
+<p>Poiché $2^7=128\lt195$ e $2^8=256\geq195$, servono <strong>8 bit</strong>. Alcune configurazioni restano inutilizzate, ma ogni simbolo ha un codice.</p>
+</div>
+
+<p>Attenzione alla differenza tra queste tre richieste:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Richiesta</th><th>Bit necessari</th><th>Motivo</th></tr></thead>
+<tbody>
+<tr><td>Rappresentare 32 simboli diversi</td><td>5</td><td>$2^5=32$ configurazioni</td></tr>
+<tr><td>Rappresentare tutti i naturali da 0 a 32</td><td>6</td><td>sono 33 valori</td></tr>
+<tr><td>Rappresentare il naturale 32 in binario</td><td>6</td><td>$32_{10}=100000_2$</td></tr>
+</tbody>
+</table>
+</div>
+<div class="box thm">
+<div class="bt">Lunghezza della rappresentazione binaria di un naturale</div>
+<p>Per un naturale $N\gt0$ la lunghezza della sua rappresentazione binaria è</p>
+$$\lfloor\log_2 N\rfloor+1.$$
+<p>Non va confusa con la formula per il numero di simboli.</p>
+</div>
+
+<h3>Parte intera e arrotondamento superiore</h3>
+<ul>
+<li>$\lfloor x\rfloor$ (<em>floor</em>): il più grande intero non maggiore di $x$.</li>
+<li>$\lceil x\rceil$ (<em>ceiling</em>): il più piccolo intero non minore di $x$.</li>
+</ul>
+<div class="tbl">
+<table>
+<thead><tr><th>$x$</th><th>$\lfloor x\rfloor$</th><th>$\lceil x\rceil$</th></tr></thead>
+<tbody>
+<tr><td>5,3</td><td>5</td><td>6</td></tr>
+<tr><td>5</td><td>5</td><td>5</td></tr>
+</tbody>
+</table>
+</div>
+<p>Floor e ceiling differiscono di 1 solo quando il numero non è intero. Questo evita l'errore di assegnare 5 bit a 16 simboli: ne bastano 4.</p>
+
+<h3>Testo e immagini</h3>
+<p>La codifica <strong>ASCII</strong> associa ai caratteri dei valori numerici. Tre riferimenti da ricordare:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Carattere</th><th>Codice decimale</th></tr></thead>
+<tbody>
+<tr><td><code>'0'</code></td><td>48</td></tr>
+<tr><td><code>'A'</code></td><td>65</td></tr>
+<tr><td><code>'a'</code></td><td>97</td></tr>
+</tbody>
+</table>
+</div>
+<p>Cifre, maiuscole e minuscole sono consecutive nei rispettivi gruppi: <code>'1'</code> vale 49 e <code>'b'</code> vale 98. Il carattere <code>'0'</code> <strong>non coincide</strong> con il numero 0.</p>
+<p>Le immagini sono composte da <strong>pixel</strong>: se ogni pixel ha $n$ bit per il colore, può distinguere fino a $2^n$ colori (1 bit &rarr; 2 colori, 10 bit &rarr; 1024). Il <strong>voxel</strong> è l'equivalente volumetrico del pixel nella rappresentazione tridimensionale.</p>
+
+<div class="box ex">
+<div class="bt">Esempio &mdash; codificare una data</div>
+<p>Il numero di bit dipende da come si organizza l'informazione:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Codifica scelta</th><th>Bit</th></tr></thead>
+<tbody>
+<tr><td>Mese + settimana nel mese + giorno della settimana</td><td>$4+3+3=10$</td></tr>
+<tr><td>Numero progressivo del giorno nell'anno</td><td>9</td></tr>
+<tr><td>Mese + giorno del mese</td><td>$4+5=9$</td></tr>
+</tbody>
+</table>
+</div>
+<p>La prima soluzione assume una convenzione per identificare le settimane del mese e non è la più compatta. Per distinguere tutti i 365 giorni servono almeno 9 bit, perché $2^8=256$ non basta e $2^9=512$ sì. Con 366 giorni il risultato non cambia.</p>
+</div>
+
+<h2>3. Basi e conversioni</h2>
+<div class="box def">
+<div class="bt">Notazione posizionale</div>
+<p>In base $b$ ogni cifra viene moltiplicata per una potenza della base, determinata dalla posizione. Partendo da destra, le posizioni della parte intera sono $0,1,2,\ldots$</p>
+$$(d_k\dots d_1d_0)_b=\sum_{i=0}^{k}d_i\, b^i.$$
+</div>
+<p>Per esempio $145_{10}=1\cdot10^2+4\cdot10^1+5\cdot10^0$. La stessa regola vale in binario:</p>
+$$101101_2=1\cdot2^5+1\cdot2^3+1\cdot2^2+1\cdot2^0=45_{10}.$$
+<p>Il punto fondamentale è che una cifra ha un valore diverso a seconda della posizione.</p>
+
+<h3>Da decimale a un'altra base</h3>
+<p>Per la parte intera si usa la <strong>divisione ripetuta</strong> per la base di destinazione:</p>
+<ol>
+<li>dividi il numero per la base;</li>
+<li>annota quoziente e resto;</li>
+<li>ripeti sul quoziente;</li>
+<li>fermati quando il quoziente diventa 0;</li>
+<li>leggi i resti <strong>dal basso verso l'alto</strong>.</li>
+</ol>
+<div class="box ex">
+<div class="bt">Esempio &mdash; $792_{10}$ in base 5</div>
+<div class="tbl">
+<table>
+<thead><tr><th>Divisione</th><th>Quoziente</th><th>Resto</th></tr></thead>
+<tbody>
+<tr><td>$792 \div 5$</td><td>158</td><td>2</td></tr>
+<tr><td>$158 \div 5$</td><td>31</td><td>3</td></tr>
+<tr><td>$31 \div 5$</td><td>6</td><td>1</td></tr>
+<tr><td>$6 \div 5$</td><td>1</td><td>1</td></tr>
+<tr><td>$1 \div 5$</td><td>0</td><td>1</td></tr>
+</tbody>
+</table>
+</div>
+<p>Leggendo i resti al contrario: $792_{10}=11132_5$. Il docente suggerisce di leggere le cifre singolarmente (&laquo;uno, uno, uno, tre, due, in base cinque&raquo;), senza interpretarle come un numero decimale.</p>
+</div>
+
+<h3>Come controllare il risultato</h3>
+<p>Si torna in decimale con i pesi posizionali:</p>
+$$11132_5=1\cdot5^4+1\cdot5^3+1\cdot5^2+3\cdot5+2=625+125+25+15+2=792.$$
+<p>Se ritrovi il numero iniziale, la conversione è corretta.</p>
+
+<h3>Scorciatoia con le potenze di 2</h3>
+<p>Per numeri piccoli puoi scomporre direttamente il valore: $35=32+2+1=2^5+2^1+2^0$. Si accendono i bit nelle posizioni 5, 1 e 0:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Pesi</th><th>32</th><th>16</th><th>8</th><th>4</th><th>2</th><th>1</th></tr></thead>
+<tbody>
+<tr><td>Bit</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+</tbody>
+</table>
+</div>
+<p>Quindi $35_{10}=100011_2$. È un'alternativa alla divisione ripetuta, non una codifica diversa.</p>
+
+<h2>4. Numeri interi con segno</h2>
+<p>La sequenza di bit da sola non basta: bisogna conoscere il <strong>numero di bit</strong> e la <strong>rappresentazione</strong> usata. Le tre codifiche studiate sono modulo e segno, complemento a 1 e complemento a 2.</p>
+
+<h3>Modulo e segno</h3>
+<p>Su $n$ bit il bit più a sinistra è il segno (0 positivo, 1 negativo), gli altri $n-1$ rappresentano il valore assoluto. Esempio su 5 bit: $+15 \to 01111$, $-15 \to 11111$.</p>
+<p>Lo zero ha due codifiche ($+0 \to 00000$, $-0 \to 10000$): le configurazioni sono $2^n$, ma i valori distinti sono $2^n-1$.</p>
+
+<h3>Complemento a 1</h3>
+<p>Per ottenere il negativo si invertono <strong>tutti</strong> i bit della rappresentazione positiva, già scritta sulla lunghezza corretta:</p>
+$$+15 \to 01111 \;\xrightarrow{\text{inverti}}\; -15 \to 10000.$$
+<p>Anche qui lo zero ha due codifiche ($+0 \to 00000$, $-0 \to 11111$). Per leggere un negativo si invertono di nuovo i bit, si ricava il valore positivo e si applica il segno meno.</p>
+
+<h3>Complemento a 2</h3>
+<p>Per ottenere l'opposto di un numero:</p>
+<ol>
+<li>inverti tutti i bit;</li>
+<li>somma 1;</li>
+<li>conserva soltanto gli $n$ bit previsti.</li>
+</ol>
+<div class="box ex">
+<div class="bt">Esempio &mdash; $-15$ su 5 bit</div>
+<p>$+15 = 01111$; inversione: $10000$; sommando 1: $10001$. Quindi $-15 = 10001$.</p>
+</div>
+<div class="box def">
+<div class="bt">Metodo alternativo equivalente</div>
+<p>Scorri da destra verso sinistra, lascia invariati i bit fino al <strong>primo 1 compreso</strong>, poi inverti tutti i bit rimanenti a sinistra.</p>
+</div>
+<p>Il complemento a 2 ha una sola codifica dello zero e un intervallo non simmetrico: un valore negativo in più rispetto ai positivi.</p>
+
+<h3>Intervalli rappresentabili</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Codifica su $n$ bit</th><th>Minimo</th><th>Massimo</th><th>Valori distinti</th></tr></thead>
+<tbody>
+<tr><td>Naturali senza segno</td><td>$0$</td><td>$2^n-1$</td><td>$2^n$</td></tr>
+<tr><td>Modulo e segno</td><td>$-(2^{n-1}-1)$</td><td>$2^{n-1}-1$</td><td>$2^n-1$</td></tr>
+<tr><td>Complemento a 1</td><td>$-(2^{n-1}-1)$</td><td>$2^{n-1}-1$</td><td>$2^n-1$</td></tr>
+<tr><td>Complemento a 2</td><td>$-2^{n-1}$</td><td>$2^{n-1}-1$</td><td>$2^n$</td></tr>
+</tbody>
+</table>
+</div>
+<p>Con 8 bit: senza segno da 0 a 255; modulo e segno o complemento a 1 da $-127$ a $+127$; complemento a 2 da $-128$ a $+127$.</p>
+
+<h3>Il peso del bit iniziale</h3>
+<p>Sia $s$ il bit più significativo e $L$ il valore senza segno rappresentato dagli altri $n-1$ bit.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Codifica</th><th>Valore</th></tr></thead>
+<tbody>
+<tr><td>Modulo e segno</td><td>$(-1)^s L$</td></tr>
+<tr><td>Complemento a 1</td><td>$-s\,(2^{n-1}-1)+L$</td></tr>
+<tr><td>Complemento a 2</td><td>$-s\,2^{n-1}+L$</td></tr>
+</tbody>
+</table>
+</div>
+<p>Nel complemento a 2 il bit iniziale ha quindi <strong>peso negativo</strong> $-2^{n-1}$. Su 6 bit i pesi sono $-32,\ 16,\ 8,\ 4,\ 2,\ 1$; nel complemento a 1 sono invece $-31,\ 16,\ 8,\ 4,\ 2,\ 1$. Per questo una stessa configurazione negativa vale un'unità in meno in complemento a 2 rispetto al complemento a 1.</p>
+
+<div class="box ex">
+<div class="bt">Esercizio &mdash; codificare $-35$ su 7 bit</div>
+<p>Si parte da $35_{10}=100011_2$.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Passaggio o codifica</th><th>Risultato</th></tr></thead>
+<tbody>
+<tr><td>$+35$ su 7 bit</td><td><code>0100011</code></td></tr>
+<tr><td>$-35$, modulo e segno</td><td><code>1100011</code></td></tr>
+<tr><td>$-35$, complemento a 1</td><td><code>1011100</code></td></tr>
+<tr><td>$-35$, complemento a 2</td><td><code>1011101</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>In complemento a 1 si inverte <code>0100011</code>; in complemento a 2 si aggiunge 1 al risultato.</p>
+</div>
+
+<div class="box ex">
+<div class="bt">Esercizio &mdash; interpretare <code>1000101</code> (7 bit)</div>
+<div class="tbl">
+<table>
+<thead><tr><th>Interpretazione</th><th>Calcolo</th><th>Valore</th></tr></thead>
+<tbody>
+<tr><td>Modulo e segno</td><td>segno negativo, modulo <code>000101</code></td><td>$-5$</td></tr>
+<tr><td>Complemento a 1</td><td>$-63+4+1$</td><td>$-58$</td></tr>
+<tr><td>Complemento a 2</td><td>$-64+4+1$</td><td>$-59$</td></tr>
+</tbody>
+</table>
+</div>
+<p>È l'esempio più chiaro del fatto che <strong>stessi bit non significa stesso numero</strong>.</p>
+</div>
+
+<h2>5. Somme e overflow</h2>
+<h3>Operazioni elementari</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Somma</th><th>Bit risultante</th><th>Riporto</th></tr></thead>
+<tbody>
+<tr><td>$0+0$</td><td>0</td><td>0</td></tr>
+<tr><td>$0+1$</td><td>1</td><td>0</td></tr>
+<tr><td>$1+0$</td><td>1</td><td>0</td></tr>
+<tr><td>$1+1$</td><td>0</td><td>1</td></tr>
+</tbody>
+</table>
+</div>
+<p>Con un riporto precedente, $1+1+1=11_2$: si scrive 1 e si riporta 1. Per il prodotto di due bit, solo $1\cdot1$ dà 1; gli altri casi danno 0.</p>
+
+<h3>Prima della somma</h3>
+<p>Gli operandi devono essere rappresentati sullo <strong>stesso numero di bit</strong>. Se il testo assegna una lunghezza, va rispettata verificando che ciascun operando sia rappresentabile.</p>
+<p>Per estendere un numero già in complemento a 2 si <strong>ripete il bit iniziale</strong>: $+5$: $0101 \to 000101$; $-5$: $1011 \to 111011$. Non si aggiungono sempre zeri a sinistra: per un negativo si aggiungono uni.</p>
+
+<div class="box ex">
+<div class="bt">Esempio &mdash; $27+(-12)$ su 6 bit</div>
+<p>$+27 = 011011$, $+12 = 001100$, $-12 = 110100$.</p>
+$$011011 + 110100 = (1)001111.$$
+<p>Si scarta il riporto esterno e si conserva $001111_2=15_{10}$. Quindi $27-12=15$. Il riporto esterno non indica, da solo, un overflow con segno.</p>
+</div>
+
+<div class="box ex">
+<div class="bt">Esempio &mdash; $11+(-17)$ su 6 bit</div>
+<p>$+11 = 001011$, $+17 = 010001$, $-17 = 101111$.</p>
+$$001011 + 101111 = 111010.$$
+<p>Lettura con i pesi: $111010_{\text{C2}}=-32+16+8+2=-6$. Il risultato è corretto: $11-17=-6$.</p>
+</div>
+
+<h3>Che cos'è l'overflow?</h3>
+<div class="box def">
+<div class="bt">Overflow</div>
+<p>L'overflow si verifica quando il risultato matematico dell'operazione è <strong>fuori dall'intervallo rappresentabile</strong> con i bit disponibili.</p>
+</div>
+<p>Nella somma in complemento a 2:</p>
+<ul>
+<li>due positivi che producono un risultato con bit iniziale 1 indicano overflow;</li>
+<li>due negativi che producono un risultato con bit iniziale 0 indicano overflow;</li>
+<li>due operandi di segno opposto non producono mai overflow nella somma.</li>
+</ul>
+<div class="box ex">
+<div class="bt">Esempio &mdash; $25+18$ su 6 bit (intervallo $[-32,31]$)</div>
+<p>Il risultato $43$ non è rappresentabile.</p>
+$$011001 + 010010 = 101011.$$
+<p>Interpretata in complemento a 2, la configurazione vale $-32+8+2+1=-21$: non è il risultato corretto, è l'effetto del traboccamento.</p>
+</div>
+<div class="box thm">
+<div class="bt">Controllo equivalente con i riporti</div>
+<p>C'è overflow se il riporto <strong>entrante</strong> nel bit più significativo è diverso da quello <strong>uscente</strong>. Non basta guardare se esiste un riporto finale.</p>
+</div>
+
+<h2>6. Frazioni e IEEE 754</h2>
+<h3>Pesi dopo la virgola</h3>
+<p>La notazione posizionale continua dopo la virgola con esponenti negativi: $2^{-1}=\tfrac12$, $2^{-2}=\tfrac14$, $2^{-3}=\tfrac18$. Per esempio:</p>
+$$10.01_2=1\cdot2^1+1\cdot2^{-2}=2{,}25_{10}.$$
+
+<h3>Virgola fissa</h3>
+<p>In virgola fissa la posizione della virgola è stabilita: alcuni bit rappresentano la parte intera e altri la parte frazionaria. Per la conversione:</p>
+<ul>
+<li><strong>parte intera:</strong> divisioni ripetute;</li>
+<li><strong>parte frazionaria:</strong> moltiplicazioni ripetute.</li>
+</ul>
+<p>Procedimento per la frazione:</p>
+<ol>
+<li>moltiplica la frazione per 2;</li>
+<li>annota la parte intera del prodotto;</li>
+<li>conserva soltanto la parte frazionaria;</li>
+<li>ripeti;</li>
+<li>leggi le parti intere nell'ordine in cui le hai ottenute, <strong>dall'alto verso il basso</strong>.</li>
+</ol>
+<div class="box ex">
+<div class="bt">Esempio &mdash; $0{,}145_{10}$ con 4 bit frazionari</div>
+<div class="tbl">
+<table>
+<thead><tr><th>Passaggio</th><th>Prodotto</th><th>Bit</th><th>Frazione successiva</th></tr></thead>
+<tbody>
+<tr><td>$0{,}145\cdot2$</td><td>0,290</td><td>0</td><td>0,290</td></tr>
+<tr><td>$0{,}290\cdot2$</td><td>0,580</td><td>0</td><td>0,580</td></tr>
+<tr><td>$0{,}580\cdot2$</td><td>1,160</td><td>1</td><td>0,160</td></tr>
+<tr><td>$0{,}160\cdot2$</td><td>0,320</td><td>0</td><td>0,320</td></tr>
+</tbody>
+</table>
+</div>
+<p>Quindi $0{,}145_{10}\approx0.0010_2$. Il valore effettivo di $0.0010_2$ è $2^{-3}=0{,}125$: è un'<strong>approssimazione</strong>, non un'uguaglianza.</p>
+</div>
+<p>Il procedimento termina esattamente quando la frazione residua diventa zero; altrimenti si continua oppure ci si ferma alla precisione richiesta. Aggiungere zeri dopo una conversione troncata <strong>non recupera</strong> i bit mancanti.</p>
+
+<h3>Virgola mobile</h3>
+<p>Un numero si esprime separando significando ed esponente: $x=m\cdot b^e$. Nel caso binario normalizzato usato da IEEE 754:</p>
+$$x=(-1)^S\cdot1.F_2\cdot2^e.$$
+<p>La virgola si sposta fino a lasciare un solo 1 prima di essa; l'esponente compensa lo spostamento. Notazione:</p>
+<ul>
+<li>$S$: bit di segno;</li>
+<li>$e$: esponente effettivo;</li>
+<li>$E$: esponente memorizzato;</li>
+<li>$F$: bit della frazione memorizzati (nel corso, spesso &laquo;campo mantissa&raquo;);</li>
+<li>$1.F_2$: significando completo, con l'1 iniziale <strong>implicito</strong>.</li>
+</ul>
+
+<h3>Struttura IEEE 754</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Formato</th><th>Bit totali</th><th>Segno</th><th>Esponente</th><th>Frazione</th></tr></thead>
+<tbody>
+<tr><td>Precisione singola</td><td>32</td><td>1</td><td>8</td><td>23</td></tr>
+<tr><td>Precisione doppia</td><td>64</td><td>1</td><td>11</td><td>52</td></tr>
+</tbody>
+</table>
+</div>
+<div class="box thm">
+<div class="bt">Precisione singola, numeri normalizzati</div>
+$$E=e+127, \qquad x=(-1)^S\cdot(1.F)_2\cdot2^{E-127}.$$
+<p>L'esponente memorizzato <strong>non</strong> è in complemento a 2: usa la rappresentazione in <em>eccesso 127</em>. I valori 0 e 255 del campo esponente sono riservati a casi speciali, quindi la formula non si applica a tutte le configurazioni.</p>
+</div>
+
+<div class="box ex">
+<div class="bt">Esempio completo &mdash; codificare $-118{,}5$</div>
+<ol>
+<li><strong>Segno:</strong> il numero è negativo, quindi $S=1$.</li>
+<li><strong>Valore assoluto:</strong> $118=64+32+16+4+2=1110110_2$ e $0{,}5=0.1_2$, quindi $118{,}5=1110110.1_2$.</li>
+<li><strong>Normalizzazione:</strong> $1110110.1_2=1.1101101_2\cdot2^6$.</li>
+<li><strong>Esponente memorizzato:</strong> $E=6+127=133=10000101_2$.</li>
+<li><strong>Campo frazione:</strong> si elimina l'1 implicito e si completa fino a 23 bit: <code>11011010000000000000000</code>.</li>
+</ol>
+<p>Codifica finale: <code>1 | 10000101 | 11011010000000000000000</code> (le barre servono solo a distinguere i campi).</p>
+</div>
+
+<h3>Come decodificare</h3>
+<p>Per leggere una configurazione IEEE 754 normalizzata in precisione singola:</p>
+<ol>
+<li>il primo bit determina il segno;</li>
+<li>gli 8 bit successivi danno $E$;</li>
+<li>calcola $e=E-127$;</li>
+<li>leggi i 23 bit frazionari e ricostruisci $1.F_2$;</li>
+<li>moltiplica per $2^e$ e applica il segno.</li>
+</ol>
+<p>Nell'esempio: $x=-1.1101101_2\cdot2^6=-1110110.1_2=-118{,}5$. La conversione è esatta perché la frazione $0{,}5$ termina in binario.</p>
+
+<div class="box ex">
+<div class="bt">Esempio approssimato &mdash; $-75{,}42$</div>
+<p>Il docente converte $0{,}42$ usando soltanto 4 bit:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Passaggio</th><th>Prodotto</th><th>Bit</th></tr></thead>
+<tbody>
+<tr><td>$0{,}42\cdot2$</td><td>0,84</td><td>0</td></tr>
+<tr><td>$0{,}84\cdot2$</td><td>1,68</td><td>1</td></tr>
+<tr><td>$0{,}68\cdot2$</td><td>1,36</td><td>1</td></tr>
+<tr><td>$0{,}36\cdot2$</td><td>0,72</td><td>0</td></tr>
+</tbody>
+</table>
+</div>
+<p>Quindi $0{,}42_{10}\approx0.0110_2$, ma $0.0110_2=\tfrac14+\tfrac18=0{,}375$: la conversione preliminare rappresenta $75{,}375$, non $75{,}42$.</p>
+<p>Normalizzando:</p>
+$$75{,}375=1001011.0110_2=1.0010110110_2\cdot2^6.$$
+<p>La codifica costruita a lezione, completando con zeri, è <code>1 | 10000101 | 00101101100000000000000</code>. Rappresenta esattamente $-75{,}375$: è una codifica IEEE 754 valida del valore approssimato, ma <strong>non</strong> la conversione a piena precisione di $-75{,}42$. L'errore è stato introdotto prima, fermando la frazione dopo 4 bit.</p>
+</div>
+
+<h2>7. Errori da evitare</h2>
+<div class="box warn">
+<div class="bt">Attenzione</div>
+<ul>
+<li>Confondere $2^n$ configurazioni con il massimo naturale $2^n-1$.</li>
+<li>Leggere i resti delle divisioni dall'alto verso il basso: vanno letti <strong>al contrario</strong>.</li>
+<li>Leggere al contrario i bit prodotti dalle moltiplicazioni: vanno mantenuti <strong>nell'ordine ottenuto</strong>.</li>
+<li>Complementare un numero prima di aver fissato la lunghezza corretta.</li>
+<li>Sommare operandi con lunghezze diverse.</li>
+<li>Confondere riporto esterno e overflow con segno.</li>
+<li>Memorizzare l'1 iniziale nel campo frazione IEEE 754: per i normalizzati è implicito.</li>
+<li>Usare $E$ direttamente come esponente effettivo senza sottrarre 127.</li>
+<li>Scrivere $=$ quando hai troncato una frazione: in quel passaggio serve $\approx$.</li>
+</ul>
+</div>
+
+<h2>8. Riepilogo finale</h2>
+<p>Dopo questa esercitazione devi saper:</p>
+<ul>
+<li>calcolare quanti bit servono per $K$ simboli ($\lceil\log_2 K\rceil$) e per scrivere un naturale ($\lfloor\log_2 N\rfloor+1$);</li>
+<li>convertire tra decimale e altre basi (divisioni ripetute, scomposizione in potenze di 2) e verificare il risultato;</li>
+<li>codificare e interpretare interi in modulo e segno, complemento a 1 e complemento a 2, con i relativi intervalli;</li>
+<li>sommare in complemento a 2 e riconoscere l'overflow;</li>
+<li>convertire frazioni in binario e codificare/decodificare numeri in IEEE 754 a precisione singola, distinguendo conversioni esatte e approssimate.</li>
+</ul>

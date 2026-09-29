@@ -21,11 +21,6 @@ var days = [
     n: 1,
     title: 'Rappresentazione dell\u2019informazione e sistemi di numerazione',
     file: 'appunti/day-01.html'
-  },
-  {
-    n: 2,
-    title: 'Elaborazione dell\u2019informazione',
-    file: 'appunti/day-02.html'
   }
 ];
 days.sort(function (a, b) { return a.n - b.n; });
@@ -38,11 +33,11 @@ days.sort(function (a, b) { return a.n - b.n; });
    "Esercitazione N" sopra il titolo è generata da JavaScript.
    ===================================================================== */
 var esercitazioni = [
-  // {
-  //   n: 1,
-  //   title: 'Titolo dell\u2019esercitazione 1',
-  //   file: 'appunti/esercitazione-1.html'
-  // }
+  {
+    n: 1,
+    title: 'Rappresentazione dell\u2019informazione',
+    file: 'appunti/esercitazione-1.html'
+  }
 ];
 esercitazioni.sort(function (a, b) { return a.n - b.n; });
 
