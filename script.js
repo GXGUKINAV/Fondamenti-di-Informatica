@@ -21,6 +21,11 @@ var days = [
     n: 1,
     title: 'Rappresentazione dell\u2019informazione e sistemi di numerazione',
     file: 'appunti/day-01.html'
+  },
+  {
+    n: 2,
+    title: 'Elaborazione dell\u2019informazione',
+    file: 'appunti/day-02.html'
   }
 ];
 days.sort(function (a, b) { return a.n - b.n; });
