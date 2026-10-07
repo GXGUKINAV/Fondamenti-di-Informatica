@@ -1,0 +1,635 @@
+<h2>1. Perché passiamo dall'assembler al C</h2>
+<p>L'assembler studiato nelle lezioni precedenti serviva a capire come lavora una macchina: memoria, accumulatore, istruzioni e salti. Il suo limite pratico è che anche operazioni semplici richiedono parecchie istruzioni. Per esempio, incrementare una variabile nel modello assembler del corso richiede:</p>
+<pre><code>LOAD A
+ADD =1
+STORE A</code></pre>
+<p>Nel C la stessa operazione si esprime con:</p>
+<pre><code>a = a + 1;</code></pre>
+<p>Analogamente, un'espressione come <code>(a + b) * (c + d)</code> nel modello assembler richiede di calcolare separatamente le due somme, memorizzare un risultato temporaneo e infine moltiplicare.</p>
+
+<h3>Che cosa cambia davvero?</h3>
+<p>Non cambia la macchina fisica: cambia il <strong>livello di astrazione</strong> con cui la programmiamo.</p>
+<ul>
+<li>Nel linguaggio vicino alla macchina gestiamo esplicitamente celle, accumulatore e salti.</li>
+<li>Nel C ragioniamo con variabili, espressioni, condizioni e cicli.</li>
+<li>La traduzione verso le istruzioni eseguibili dalla macchina viene affidata al <strong>compilatore</strong>.</li>
+</ul>
+<p>L'obiettivo del corso rimane scrivere algoritmi corretti e ragionevoli, usando un sottoinsieme dell'ANSI C.</p>
+
+<div class="box warn">
+<div class="bt">Pseudo-C e C completo: non mischiare i due livelli</div>
+<p>Oggi il professore usa soprattutto <strong>pseudo-C</strong>, cioè una versione semplificata che serve a ragionare sugli algoritmi, non ancora a scrivere programmi compilabili. Le slide introducono il C completo più avanti. Inoltre C e C++ non sono intercambiabili negli esercizi, e bisogna saper spiegare le soluzioni anche quando si usa un'IA per farsi aiutare.</p>
+</div>
+
+<h2>2. Ambiente di programmazione</h2>
+<p>Per lavorare servono strumenti con ruoli diversi.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Strumento</th><th>Ruolo</th></tr></thead>
+<tbody>
+<tr><td>Editor di testo</td><td>Scrivere e salvare il codice sorgente.</td></tr>
+<tr><td>Compilatore</td><td>Tradurre il sorgente e segnalare determinati errori.</td></tr>
+<tr><td>Ambiente di sviluppo integrato (IDE)</td><td>Riunire più strumenti in un unico ambiente.</td></tr>
+<tr><td>Debugger</td><td>Aiutare a esaminare l'esecuzione (oggi non approfondito).</td></tr>
+</tbody>
+</table>
+</div>
+<p>Il codice va scritto come <strong>testo semplice</strong>: Word non è lo strumento adatto, perché un documento formattato non coincide con un file sorgente. A lezione vengono citati editor come VS Code, il compilatore GCC e ambienti integrati come CLion; è ammesso anche lavorare con un ambiente online. La scelta dell'ambiente non è il punto centrale del corso: conta poter scrivere, provare e correggere il codice.</p>
+
+<h3>Dal sorgente all'esecuzione</h3>
+<p>Lo schema semplificato presentato a lezione è:</p>
+<ol>
+<li>scrittura del sorgente;</li>
+<li>compilazione;</li>
+<li>se non ci sono errori bloccanti, generazione dell'eseguibile;</li>
+<li>esecuzione e verifica del risultato.</li>
+</ol>
+<p>Anche quando un ambiente online offre un unico pulsante «Run», per il C la compilazione precede l'esecuzione.</p>
+
+<h2>3. Errori, warning e correttezza</h2>
+<p>Il compilatore controlla il programma, ma <strong>non certifica</strong> che risolva il problema richiesto. Tre situazioni da distinguere:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Situazione</th><th>Significato</th></tr></thead>
+<tbody>
+<tr><td>Errore di compilazione</td><td>Il programma viola una regola che impedisce di completare correttamente la traduzione.</td></tr>
+<tr><td>Warning</td><td>Il compilatore segnala qualcosa di sospetto; normalmente non impedisce la compilazione.</td></tr>
+<tr><td>Errore logico</td><td>L'algoritmo non produce il risultato richiesto, anche se il programma compila.</td></tr>
+</tbody>
+</table>
+</div>
+<p>Un punto e virgola mancante è un tipico problema sintattico. Sommare invece un valore fittizio ai dati dell'utente è un errore di ragionamento: il codice può essere traducibile, ma il risultato è sbagliato. Il professore invita a esaminare anche i warning, non soltanto gli errori bloccanti.</p>
+<div class="box warn">
+<div class="bt">«Compila» non significa «è corretto»</div>
+<p>Bisogna sempre verificare che il comportamento del programma corrisponda alla richiesta.</p>
+</div>
+
+<h3>Compilazione e interpretazione</h3>
+<ul>
+<li>Con la <strong>compilazione</strong> si traduce il programma prima di eseguirlo.</li>
+<li>Con l'<strong>interpretazione</strong> un esecutore gestisce il programma durante la sua esecuzione.</li>
+</ul>
+<p>Il professore anticipa Python come esempio da affrontare più avanti. Per ora interessa capire perché il programma C deve passare attraverso la compilazione.</p>
+
+<h2>4. La macchina astratta C e le variabili</h2>
+<p>Nel modello didattico del C restano tre componenti fondamentali:</p>
+<ul>
+<li><strong>standard input:</strong> da cui arrivano i dati;</li>
+<li><strong>standard output:</strong> su cui vengono scritti i risultati;</li>
+<li><strong>memoria:</strong> in cui conserviamo i dati durante l'elaborazione.</li>
+</ul>
+<p>La differenza rispetto al modello assembler è che normalmente non indichiamo la memoria attraverso indirizzi numerici: usiamo <strong>nomi simbolici</strong>, cioè identificatori di variabili.</p>
+<pre><code>somma = 0;</code></pre>
+<p>Qui <code>somma</code> identifica la variabile in cui conserviamo il risultato progressivo. Per gli esempi iniziali il modello non impone limiti fisici alla memoria e ai supporti di input/output: è una semplificazione didattica, non l'affermazione che la memoria di un computer sia infinita.</p>
+
+<h3>Identificatori</h3>
+<p>Le regole e le convenzioni presentate a lezione sono:</p>
+<ul>
+<li>non iniziare il nome con una cifra;</li>
+<li>distinguere maiuscole e minuscole;</li>
+<li>evitare le parole riservate del linguaggio;</li>
+<li>scegliere nomi coerenti, preferibilmente comprensibili.</li>
+</ul>
+<p>Nomi validi: <code>x</code>, <code>x1</code>, <code>somma</code>, <code>numeroFatture</code>, <code>numero_fatture</code>. Invece <code>1numero</code> <strong>non</strong> è un identificatore valido.</p>
+<p><code>somma</code>, <code>Somma</code> e <code>SOMMA</code> sono nomi diversi. Due convenzioni citate: <code>numeroFatture</code> (camelCase) e <code>numero_fatture</code> (parole separate da underscore). La cosa importante è non cambiare accidentalmente la scrittura di un nome durante il programma.</p>
+
+<h2>5. Struttura dello pseudo-C</h2>
+<p>Lo scheletro usato negli esempi è:</p>
+<pre><code>main() {
+  /* istruzioni */
+}</code></pre>
+<ul>
+<li><code>main()</code> introduce il programma nel modello adottato.</li>
+<li>Le parentesi graffe delimitano un <strong>blocco</strong>.</li>
+<li>Assegnamenti e operazioni di input/output terminano con <code>;</code>.</li>
+<li>L'indentazione rende visibile la struttura del codice.</li>
+</ul>
+
+<h3>Indentazione e significato</h3>
+<p>Nel C l'indentazione aiuta chi legge, ma <strong>non determina</strong> quali istruzioni appartengano a un blocco: quello dipende dalla sintassi, in particolare dalle parentesi graffe.</p>
+<div class="box ex">
+<div class="bt">Esempio &mdash; cosa c'è davvero nel ciclo</div>
+<pre><code>while (dato != 0)
+  scanf(dato);
+printf(1);</code></pre>
+<p>Il ciclo contiene soltanto <code>scanf(dato)</code>. L'istruzione <code>printf(1)</code> viene eseguita dopo l'uscita dal ciclo, indipendentemente da come la si allinea sulla pagina.</p>
+</div>
+
+<h3>Commenti</h3>
+<p>La forma mostrata a lezione è <code>/* Questo è un commento */</code>. I commenti servono a spiegare il codice, motivare una scelta o chiarire il significato dei dati.</p>
+
+<h2>6. Assegnamento e operatori aritmetici</h2>
+<p>L'assegnamento ha questa forma:</p>
+<pre><code>variabile = espressione;</code></pre>
+<p>Si calcola il valore dell'espressione a destra e lo si memorizza nella variabile a sinistra. Esempi:</p>
+<pre><code>x = 23;
+y = z;
+risultato = (a + b) * (c + d);
+x = x + 1;</code></pre>
+
+<h3>Perché <code>x = x + 1</code> ha senso?</h3>
+<p>Non è un'uguaglianza matematica: è un <strong>aggiornamento</strong>. Se inizialmente <code>x</code> vale 7:</p>
+<ol>
+<li>si legge il vecchio valore di <code>x</code>;</li>
+<li>si calcola 7 + 1;</li>
+<li>si memorizza 8 in <code>x</code>.</li>
+</ol>
+<p>Il nuovo valore sostituisce quello precedente. È la forma compatta dell'operazione di caricamento, modifica e salvataggio vista nell'assembler.</p>
+
+<h3>Operatori aritmetici</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Operatore</th><th>Operazione</th></tr></thead>
+<tbody>
+<tr><td><code>+</code></td><td>Somma</td></tr>
+<tr><td><code>-</code></td><td>Sottrazione</td></tr>
+<tr><td><code>*</code></td><td>Moltiplicazione</td></tr>
+<tr><td><code>/</code></td><td>Divisione</td></tr>
+<tr><td><code>%</code></td><td>Resto della divisione tra interi</td></tr>
+</tbody>
+</table>
+</div>
+<p>Il resto serve per esprimere facilmente il controllo di parità: la condizione <code>x % 2 == 0</code> verifica se <code>x</code> è pari. Non confondere <code>%</code>, operatore in un'espressione, con il carattere <code>'%'</code>, usato come terminatore in alcuni esempi.</p>
+
+<h2>7. Variabili, caratteri e stringhe</h2>
+<p>Queste tre scritture hanno significati diversi:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Scrittura</th><th>Significato</th></tr></thead>
+<tbody>
+<tr><td><code>a</code></td><td>Identificatore di una variabile.</td></tr>
+<tr><td><code>'a'</code></td><td>Carattere singolo.</td></tr>
+<tr><td><code>"a"</code></td><td>Stringa contenente il carattere <code>a</code>.</td></tr>
+</tbody>
+</table>
+</div>
+<p>Una <strong>stringa</strong> è una sequenza di caratteri: non deve necessariamente essere una parola sensata (<code>"Ciao"</code>, <code>"alfa-beta"</code>, <code>"hkz8"</code>). Analogamente, <code>2</code> e <code>'2'</code> indicano rispettivamente un numero e un carattere: possono apparire allo stesso modo sullo schermo, ma rappresentano dati concettualmente diversi.</p>
+
+<h2>8. Input e output nello pseudo-C</h2>
+<p>Per ora si usano forme semplificate:</p>
+<ul>
+<li><code>scanf(x)</code> significa leggere un dato e memorizzarlo in <code>x</code>;</li>
+<li><code>printf(x)</code> significa scrivere il valore di <code>x</code>;</li>
+<li><code>printf("Ciao")</code> significa scrivere una stringa;</li>
+<li><code>printf((a - z) / 10)</code> significa calcolare e scrivere un risultato.</li>
+</ul>
+<div class="box warn">
+<div class="bt">Attenzione</div>
+<p>Queste forme servono a descrivere l'algoritmo: non vanno incollate in un compilatore aspettandosi che siano C completo. Le dichiarazioni e la sintassi reale di input/output vengono introdotte nelle slide successive.</p>
+</div>
+
+<h2>9. Condizioni e operatori relazionali</h2>
+<p>Una <strong>condizione</strong>, o espressione booleana, è un'espressione che valutiamo come vera o falsa. Serve a decidere quali istruzioni eseguire e se continuare un ciclo.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Operatore</th><th>Significato</th></tr></thead>
+<tbody>
+<tr><td><code>==</code></td><td>Uguale</td></tr>
+<tr><td><code>!=</code></td><td>Diverso</td></tr>
+<tr><td><code>&lt;</code></td><td>Minore</td></tr>
+<tr><td><code>&gt;</code></td><td>Maggiore</td></tr>
+<tr><td><code>&lt;=</code></td><td>Minore o uguale</td></tr>
+<tr><td><code>&gt;=</code></td><td>Maggiore o uguale</td></tr>
+</tbody>
+</table>
+</div>
+<div class="box warn">
+<div class="bt">Attenzione: <code>=</code> non è <code>==</code></div>
+<pre><code>x = 3;    /* assegna 3 a x */
+x == 3    /* verifica se x vale 3 */</code></pre>
+<p>Il primo modifica il dato; il secondo esprime un confronto.</p>
+</div>
+
+<h2>10. Operatori logici: AND, OR e NOT</h2>
+<p>Per costruire condizioni composte si usano:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Operatore</th><th>Nome</th><th>Quando è vero</th></tr></thead>
+<tbody>
+<tr><td><code>&amp;&amp;</code></td><td>AND</td><td>Quando entrambe le condizioni sono vere.</td></tr>
+<tr><td><code>||</code></td><td>OR</td><td>Quando almeno una condizione è vera.</td></tr>
+<tr><td><code>!</code></td><td>NOT</td><td>Quando la condizione negata è falsa.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Tabella della verità</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>A</th><th>B</th><th>A AND B</th><th>A OR B</th></tr></thead>
+<tbody>
+<tr><td>Vero</td><td>Vero</td><td>Vero</td><td>Vero</td></tr>
+<tr><td>Vero</td><td>Falso</td><td>Falso</td><td>Vero</td></tr>
+<tr><td>Falso</td><td>Vero</td><td>Falso</td><td>Vero</td></tr>
+<tr><td>Falso</td><td>Falso</td><td>Falso</td><td>Falso</td></tr>
+</tbody>
+</table>
+</div>
+<p>L'OR è <strong>inclusivo</strong>: il risultato è vero anche quando entrambe le condizioni sono vere.</p>
+
+<h3>Esempio: numero compreso tra 1 e 10</h3>
+<div class="box ex">
+<div class="bt">Esempio &mdash; AND e OR non sono intercambiabili</div>
+<pre><code>x &gt;= 1 &amp;&amp; x &lt;= 10</code></pre>
+<p>Servono entrambe le condizioni: rispettare solo il limite inferiore o solo quello superiore non basta. Con</p>
+<pre><code>x &gt; 0 || x &lt; 11</code></pre>
+<p>non si seleziona quell'intervallo: anche <code>-3</code> soddisfa la seconda parte e anche <code>20</code> soddisfa la prima.</p>
+</div>
+<p>Per negare un confronto, <code>!(x == 3)</code> equivale a <code>x != 3</code>. Le parentesi aiutano a rendere evidente quale espressione si vuole negare.</p>
+
+<h2>11. Le tre strutture del flusso di controllo</h2>
+<p>Il programma si costruisce combinando tre idee:</p>
+<ol>
+<li><strong>Sequenza:</strong> eseguire istruzioni una dopo l'altra.</li>
+<li><strong>Selezione:</strong> scegliere un ramo attraverso una condizione.</li>
+<li><strong>Iterazione:</strong> ripetere un blocco finché una condizione lo permette.</li>
+</ol>
+<p>Queste strutture possono essere <strong>annidate</strong>: un ciclo può contenere un <code>if</code>, un ramo può contenere un ciclo e un ciclo può contenere un altro ciclo.</p>
+
+<h2>12. Selezione: if e else</h2>
+<p>La struttura generale è:</p>
+<pre><code>if (condizione) {
+  /* istruzioni se la condizione è vera */
+} else {
+  /* istruzioni se la condizione è falsa */
+}</code></pre>
+<p>Il ramo <code>else</code> è facoltativo: se manca e la condizione è falsa, si prosegue dopo l'<code>if</code> senza eseguirne il corpo. Se un ramo contiene una sola istruzione, le graffe possono essere omesse:</p>
+<pre><code>if (x == 0)
+  z = 5;
+else
+  z = 10;</code></pre>
+<p>Se deve contenere più istruzioni, bisogna raggrupparle:</p>
+<pre><code>if (x == 0) {
+  z = 5;
+  y = 10;
+}</code></pre>
+<p>Non si mette un punto e virgola subito dopo la condizione per introdurre il corpo.</p>
+
+<h3>Esempio: maggiore tra due numeri</h3>
+<div class="box ex">
+<div class="bt">Esempio &mdash; massimo di due numeri (pseudo-C)</div>
+<pre><code>main() {
+  scanf(x);
+  scanf(y);
+  if (x &gt; y) {
+    z = x;
+  } else {
+    z = y;
+  }
+  printf(z);
+}</code></pre>
+<p>La variabile <code>z</code> conserva il maggiore. In alternativa si può stampare direttamente il valore nel ramo scelto:</p>
+<pre><code>if (x &gt; y) {
+  printf(x);
+} else {
+  printf(y);
+}</code></pre>
+<p>Le due soluzioni producono lo stesso valore; la seconda non richiede la variabile aggiuntiva. Se i numeri sono uguali, viene scelto il ramo <code>else</code>, ma il risultato resta corretto.</p>
+</div>
+
+<h3>A quale if appartiene un else?</h3>
+<p>Senza graffe che impongano un'altra struttura, l'<code>else</code> si associa all'<code>if</code> precedente più vicino ancora privo di <code>else</code>. <strong>Non decide l'indentazione.</strong></p>
+<pre><code>if (c1)
+  if (c2)
+    s1;
+else
+  s2;</code></pre>
+<p>Qui l'<code>else</code> appartiene a <code>if (c2)</code>. Per associarlo al primo <code>if</code> servono le graffe:</p>
+<pre><code>if (c1) {
+  if (c2) {
+    s1;
+  }
+} else {
+  s2;
+}</code></pre>
+
+<h2>13. Iterazione: while</h2>
+<pre><code>while (condizione) {
+  /* corpo del ciclo */
+}</code></pre>
+<p>Il comportamento è:</p>
+<ol>
+<li>valutare la condizione;</li>
+<li>se è vera, eseguire il corpo;</li>
+<li>tornare a valutare la condizione;</li>
+<li>se è falsa, proseguire dopo il ciclo.</li>
+</ol>
+<p>Il corpo può quindi essere eseguito <strong>zero volte</strong>.</p>
+
+<h3>Esempio di decremento</h3>
+<div class="box ex">
+<div class="bt">Esempio &mdash; quando esce il ciclo?</div>
+<pre><code>while (x &gt;= 0) {
+  x = x - 1;
+}</code></pre>
+<p>Partendo da <code>x = 3</code>, i valori diventano 3 → 2 → 1 → 0 → -1. Il ciclo esce quando <code>x</code> vale -1, perché 0 soddisfa ancora <code>x &gt;= 0</code>.</p>
+</div>
+
+<h3>Cicli che non terminano</h3>
+<p>Se la condizione continua a risultare vera, il ciclo non termina. Bisogna quindi controllare che il corpo modifichi i dati nel modo necessario a far raggiungere la condizione di uscita. Il compilatore non sostituisce questo ragionamento sull'algoritmo.</p>
+
+<h2>14. Esempio: leggere fino al primo zero</h2>
+<p>Richiesta: leggere numeri e stampare 1 dopo aver incontrato il primo zero.</p>
+<pre><code>main() {
+  scanf(dato);
+  while (dato != 0) {
+    scanf(dato);
+  }
+  printf(1);
+}</code></pre>
+<p>La lettura prima del ciclo serve a dare un valore noto a <code>dato</code> prima del primo controllo.</p>
+<ul>
+<li>Se il primo dato è zero, il corpo non viene eseguito.</li>
+<li>Se non è zero, si continua a leggere.</li>
+<li>La stampa avviene soltanto dopo l'uscita dal ciclo.</li>
+</ul>
+
+<h2>15. Esempio: somma di una sequenza terminata da zero</h2>
+<p>La richiesta assume una sequenza di numeri positivi, seguita da uno zero che segnala la fine.</p>
+<pre><code>main() {
+  somma = 0;
+  scanf(numero);
+  while (numero != 0) {
+    somma = somma + numero;
+    scanf(numero);
+  }
+  printf(somma);
+}</code></pre>
+
+<h3>Ruolo delle variabili</h3>
+<ul>
+<li><code>somma</code>: conserva il totale dei numeri già elaborati;</li>
+<li><code>numero</code>: contiene il dato corrente;</li>
+<li><code>0</code>: è la <strong>sentinella</strong>, cioè il valore che segnala la fine.</li>
+</ul>
+<p>Per l'ingresso <code>4 7 2 0</code> l'evoluzione è:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Dato corrente</th><th>Somma dopo l'elaborazione</th></tr></thead>
+<tbody>
+<tr><td>4</td><td>4</td></tr>
+<tr><td>7</td><td>11</td></tr>
+<tr><td>2</td><td>13</td></tr>
+<tr><td>0</td><td>il ciclo termina</td></tr>
+</tbody>
+</table>
+</div>
+<p>L'ordine è importante: prima si somma il numero corrente, poi si legge quello successivo. Non occorre memorizzare tutta la sequenza, perché per risolvere il problema bastano il dato corrente e il totale progressivo.</p>
+
+<h3>Perché non inizializzare semplicemente <code>numero = 1</code>?</h3>
+<p>Se si lascia il corpo nello stesso ordine, si aggiunge alla somma un valore che non proviene dall'input. Una variante illustrata dal professore è:</p>
+<pre><code>somma = 0;
+numero = 1;
+while (numero != 0) {
+  scanf(numero);
+  somma = somma + numero;
+}</code></pre>
+<p>Qui il valore iniziale permette di entrare nel ciclo, ma viene sostituito dalla lettura prima di essere sommato. Se si legge zero, aggiungerlo non cambia il totale. Cambiare l'inizializzazione richiede dunque di ripensare anche l'ordine delle operazioni.</p>
+
+<h2>16. Esempio: validità e tipo di un triangolo</h2>
+<p>Si leggono tre lunghezze, assunte positive, e si verifica che ciascun lato sia strettamente minore della somma degli altri due:</p>
+<pre><code>x &lt; y + z &amp;&amp; y &lt; x + z &amp;&amp; z &lt; x + y</code></pre>
+<p>Se il triangolo esiste, lo si classifica:</p>
+<ul>
+<li><strong>equilatero:</strong> tre lati uguali;</li>
+<li><strong>isoscele:</strong> due lati uguali, dopo aver escluso l'equilatero;</li>
+<li><strong>scaleno:</strong> tre lati diversi.</li>
+</ul>
+<p>Pseudo-C riscritto con graffe esplicite:</p>
+<pre><code>main() {
+  scanf(x);
+  scanf(y);
+  scanf(z);
+  if ((x &lt; y + z) &amp;&amp;
+      (y &lt; x + z) &amp;&amp;
+      (z &lt; x + y)) {
+    if (x == y &amp;&amp; y == z) {
+      printf("Triangolo equilatero");
+    } else if (x == y || y == z || x == z) {
+      printf("Triangolo isoscele");
+    } else {
+      printf("Triangolo scaleno");
+    }
+  } else {
+    printf("Nessun triangolo");
+  }
+}</code></pre>
+
+<h3>Perché i controlli sono in questo ordine?</h3>
+<p>Se si controllasse prima la presenza di una coppia di lati uguali, anche un equilatero soddisferebbe quella condizione. Escludere prima il caso «tre lati uguali» permette di interpretare correttamente il controllo successivo.</p>
+<p>Per l'equilatero bastano <code>x == y &amp;&amp; y == z</code>: non serve aggiungere <code>x == z</code>, che deriva dalle altre due uguaglianze. Non si sostituiscono però i confronti con una scrittura matematica concatenata: il confronto va espresso attraverso condizioni collegate da AND.</p>
+
+<h2>17. Ciclo do-while</h2>
+<pre><code>do {
+  /* corpo del ciclo */
+} while (condizione);</code></pre>
+<p>La condizione viene controllata <strong>dopo</strong> il corpo, quindi il ciclo viene eseguito almeno una volta.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Ciclo</th><th>Momento del controllo</th><th>Esecuzioni minime</th></tr></thead>
+<tbody>
+<tr><td><code>while</code></td><td>Prima del corpo</td><td>0</td></tr>
+<tr><td><code>do-while</code></td><td>Dopo il corpo</td><td>1</td></tr>
+</tbody>
+</table>
+</div>
+<div class="box ex">
+<div class="bt">Esempio &mdash; leggere e stampare cinque dati</div>
+<pre><code>i = 0;
+do {
+  scanf(a);
+  printf(a);
+  i = i + 1;
+} while (i &lt; 5);</code></pre>
+<p>Si leggono e si stampano cinque dati: <code>i</code> conta le ripetizioni, mentre <code>a</code> contiene il valore letto. Non si stanno stampando necessariamente i numeri da zero a quattro.</p>
+</div>
+
+<h2>18. Ciclo for</h2>
+<p>Il <code>for</code> raccoglie nella sua intestazione inizializzazione, condizione e aggiornamento:</p>
+<pre><code>for (inizializzazione; condizione; aggiornamento) {
+  /* corpo */
+}</code></pre>
+<div class="box ex">
+<div class="bt">Esempio &mdash; for equivalente a while</div>
+<pre><code>for (i = 0; i &lt; 5; i = i + 1) {
+  scanf(a);
+  printf(a);
+}</code></pre>
+<p>L'ordine di esecuzione è:</p>
+<ol>
+<li>inizializzare <code>i</code>, una sola volta;</li>
+<li>controllare <code>i &lt; 5</code>;</li>
+<li>eseguire il corpo se la condizione è vera;</li>
+<li>aggiornare <code>i</code>;</li>
+<li>tornare al controllo.</li>
+</ol>
+<p>L'esempio corrisponde a:</p>
+<pre><code>i = 0;
+while (i &lt; 5) {
+  scanf(a);
+  printf(a);
+  i = i + 1;
+}</code></pre>
+</div>
+<p>Il <code>for</code> non inventa automaticamente l'aggiornamento: il programmatore lo specifica, ma lo colloca nell'intestazione invece che nel corpo. Nell'esempio della lezione <code>while</code>, <code>do-while</code> e <code>for</code> producono lo stesso comportamento; non bisogna però dimenticare la diversa posizione del controllo nel <code>do-while</code>.</p>
+
+<h2>19. Perché servono gli array</h2>
+<p>Per calcolare una somma basta un totale progressivo. Per riscrivere una sequenza in ordine inverso, invece, bisogna conservare i dati prima di poterli stampare a partire dall'ultimo. Una sola variabile non basta:</p>
+<pre><code>scanf(x);
+scanf(x);
+scanf(x);</code></pre>
+<p>Ogni nuova lettura sostituisce il valore precedente.</p>
+<div class="box def">
+<div class="bt">Definizione &mdash; Array</div>
+<p>Un <strong>array</strong> è una sequenza lineare di celle omogenee e consecutive che costituiscono una singola variabile strutturata: permette di conservare una sequenza di elementi attraverso un unico nome.</p>
+</div>
+
+<h3>Accesso attraverso un indice</h3>
+<p>Con <code>sequenza[i]</code>: <code>sequenza</code> è il nome dell'array, <code>i</code> è l'<strong>indice</strong> e <code>sequenza[i]</code> è l'elemento nella posizione indicata. Gli indici partono da <strong>zero</strong>: con dieci elementi, gli indici validi vanno da 0 a 9.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Indice</th><th>0</th><th>1</th><th>2</th><th>3</th></tr></thead>
+<tbody>
+<tr><td>Valore</td><td>10</td><td>20</td><td>30</td><td>40</td></tr>
+</tbody>
+</table>
+</div>
+<p>Quindi <code>sequenza[2]</code> indica il <em>terzo</em> elemento. L'indice può essere anche un'espressione, come <code>i + 1</code>, ma deve individuare una posizione valida dell'array. Il controllo di non uscire dai limiti è responsabilità del programmatore.</p>
+
+<h2>20. Esempio: stampare una sequenza al contrario</h2>
+<p>Nell'esempio didattico il carattere <code>'%'</code> segnala la fine dell'input. Restiamo nel modello pseudo-C, che semplifica la gestione dei dati.</p>
+<pre><code>main() {
+  indice = 0;
+  scanf(x);
+  while (x != '%') {
+    sequenza[indice] = x;
+    indice = indice + 1;
+    scanf(x);
+  }
+  while (indice &gt; 0) {
+    indice = indice - 1;
+    printf(sequenza[indice]);
+  }
+}</code></pre>
+
+<h3>Prima fase: memorizzazione</h3>
+<p>Per ogni dato: si memorizza nella posizione <code>indice</code>, si incrementa <code>indice</code>, si legge il dato successivo. Alla fine <code>indice</code> indica la prima posizione libera e, nello stesso tempo, il numero di elementi memorizzati. Con tre dati le posizioni occupate sono 0, 1, 2 e l'indice finale è 3.</p>
+
+<h3>Seconda fase: lettura inversa</h3>
+<p>Bisogna <strong>decrementare prima di stampare</strong>:</p>
+<ul>
+<li><code>indice</code> 3 → decremento a 2 → stampo <code>sequenza[2]</code>;</li>
+<li><code>indice</code> 2 → decremento a 1 → stampo <code>sequenza[1]</code>;</li>
+<li><code>indice</code> 1 → decremento a 0 → stampo <code>sequenza[0]</code>;</li>
+<li><code>indice</code> 0 → termino.</li>
+</ul>
+<div class="box warn">
+<div class="bt">Attenzione ai limiti</div>
+<ul>
+<li>Stampare subito <code>sequenza[indice]</code> significherebbe leggere una posizione non ancora riempita.</li>
+<li>La condizione <code>while (indice &gt; 0)</code> è corretta per questo corpo. Con <code>indice &gt;= 0</code> si entrerebbe anche con zero, lo si decrementerebbe a -1 e si tenterebbe di leggere una posizione non valida.</li>
+</ul>
+</div>
+
+<h2>21. Esempio delle fatture: quattro array collegati</h2>
+<p>Questo esercizio è stato svolto dopo l'introduzione degli array. Ogni fattura contiene quattro dati: importo, giorno, mese, anno. La soluzione usa quattro array: <code>fatture[]</code>, <code>giorno[]</code>, <code>mese[]</code>, <code>anno[]</code>. L'indice collega i dati della stessa fattura:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Indice</th><th>Importo</th><th>Giorno</th><th>Mese</th><th>Anno</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><code>fatture[0]</code></td><td><code>giorno[0]</code></td><td><code>mese[0]</code></td><td><code>anno[0]</code></td></tr>
+<tr><td>1</td><td><code>fatture[1]</code></td><td><code>giorno[1]</code></td><td><code>mese[1]</code></td><td><code>anno[1]</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>È la scelta della struttura dati a rendere semplice la successiva elaborazione. Il professore cita anche alternative, come un unico array organizzato a gruppi di quattro dati o un array bidimensionale, senza svilupparle allo stesso livello.</p>
+
+<h3>Fase di lettura</h3>
+<pre><code>contatore = 0;
+totale = 0;
+scanf(dato);
+while (dato != '%') {
+  fatture[contatore] = dato;
+  totale = totale + dato;
+  scanf(dato);
+  giorno[contatore] = dato;
+  scanf(dato);
+  mese[contatore] = dato;
+  scanf(dato);
+  anno[contatore] = dato;
+  contatore = contatore + 1;
+  scanf(dato);
+}
+numFatture = contatore;</code></pre>
+<p>Il contatore cresce una sola volta per fattura, non dopo ogni singolo dato: i quattro valori devono restare associati alla stessa posizione. Il totale viene calcolato durante la lettura, senza aspettare di aver memorizzato tutti gli importi.</p>
+
+<h3>Perché salvare <code>numFatture</code>?</h3>
+<p>Dopo la lettura, <code>contatore</code> contiene il numero delle fatture. Se lo riportiamo a zero per scandire gli array, perdiamo quel valore, a meno di averlo copiato:</p>
+<pre><code>numFatture = contatore;
+contatore = 0;</code></pre>
+<p>La scansione degli importi usa poi:</p>
+<pre><code>while (contatore &lt; numFatture) {
+  printf('$');
+  printf(fatture[contatore]);
+  contatore = contatore + 1;
+}</code></pre>
+<p>Si stampa quindi il totale e si ricomincia da zero per scrivere le date, prelevando giorno, mese e anno con lo stesso indice. La condizione è <code>&lt; numFatture</code>, non <code>&lt;=</code>, perché l'ultima fattura occupa la posizione <code>numFatture - 1</code>.</p>
+
+<h2>22. Parte finale: sostituire una parola in un testo</h2>
+<p>Negli ultimi minuti viene introdotto un problema più articolato, senza sviluppare in aula tutta la lunga soluzione presente nelle slide. L'input ha questa struttura:</p>
+<pre><code>parolaDaSostituire$parolaNuova#testo%</code></pre>
+<p>Il programma deve riscrivere il testo sostituendo ogni occorrenza della prima parola con la seconda. I casi particolari richiesti sono:</p>
+<ul>
+<li>prima parola assente: segnalare un errore;</li>
+<li>seconda parola assente: eliminare le occorrenze della prima;</li>
+<li>testo assente: non riscrivere nulla.</li>
+</ul>
+
+<h3>Raffinamenti successivi</h3>
+<p>Il messaggio metodologico è procedere per gradi:</p>
+<ol>
+<li>descrivere i passi in italiano;</li>
+<li>organizzarli con condizioni e cicli;</li>
+<li>lasciare temporaneamente alcuni sottoproblemi da sviluppare;</li>
+<li>dettagliare progressivamente la soluzione.</li>
+</ol>
+<div class="box ex">
+<div class="bt">Esempio &mdash; primo schema in italiano</div>
+<pre><code>Memorizza la parola da cercare.
+Memorizza la parola sostitutiva.
+Per ogni parola del testo:
+  confrontala con la parola da cercare;
+  se coincide, scrivi la sostitutiva;
+  altrimenti, scrivi la parola originale.</code></pre>
+</div>
+<p>Non bisogna pretendere di scrivere subito ogni dettaglio del programma: prima si rende chiara la struttura dell'algoritmo.</p>
+
+<h3>Confronto tra parole</h3>
+<p>Il professore conclude con due accorgimenti:</p>
+<ol>
+<li>se le lunghezze sono diverse, le parole sono già sicuramente diverse;</li>
+<li>se hanno la stessa lunghezza, si confrontano i caratteri fermandosi alla prima differenza.</li>
+</ol>
+<p>Se tutti i caratteri corrispondono, le parole sono uguali. Continuare a confrontare dopo aver trovato una differenza non aggiunge informazione utile.</p>
+
+<h2>23. Checklist per il ripasso</h2>
+<div class="box warn">
+<div class="bt">Cose da saper spiegare e applicare</div>
+<ul>
+<li>Distinguere sorgente, compilazione ed esecuzione.</li>
+<li>Spiegare perché un programma che compila può comunque essere sbagliato.</li>
+<li>Distinguere <code>=</code> da <code>==</code>.</li>
+<li>Distinguere variabile, carattere e stringa.</li>
+<li>Comporre condizioni usando correttamente <code>&amp;&amp;</code>, <code>||</code> e <code>!</code>.</li>
+<li>Individuare i blocchi attraverso le graffe, non soltanto l'indentazione.</li>
+<li>Capire a quale <code>if</code> appartiene un <code>else</code>.</li>
+<li>Descrivere l'ordine di esecuzione di <code>while</code>, <code>do-while</code> e <code>for</code>.</li>
+<li>Inizializzare o leggere i dati prima di usarli in una condizione.</li>
+<li>Aggiornare i dati da cui dipende la prosecuzione di un ciclo.</li>
+<li>Distinguere il numero di elementi dall'indice dell'ultimo elemento.</li>
+<li>Scandire un array senza saltare elementi né uscire dai limiti.</li>
+<li>Memorizzare i dati quando serve, evitando di conservarli tutti quando basta un risultato progressivo.</li>
+<li>Scomporre un problema in passi e sottoproblemi prima di scrivere tutti i dettagli.</li>
+</ul>
+</div>
+<p>Dichiarazioni dei tipi, formati di <code>printf</code>/<code>scanf</code> e struttura del C compilabile restano il passo successivo (compaiono nella parte finale di <code>introC.pdf</code>): non vanno confusi con il livello di pseudo-C usato negli esempi di oggi.</p>
