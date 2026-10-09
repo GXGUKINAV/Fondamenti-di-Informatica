@@ -1,0 +1,601 @@
+<h2>1. Introduzione</h2>
+<p>Questa esercitazione riprende e completa i Day 1 e 2: <strong>conversioni di base</strong> (parte intera e parte frazionaria), <strong>IEEE 754</strong>, <strong>interi negativi</strong> e il numero minimo di bit necessari, poi la <strong>macchina didattica di von Neumann</strong> con quattro esercizi in assembler. Nell'ultima parte il metodo conta quanto il codice: prima si capisce il testo e si scelgono le celle, poi si traduce, e solo alla fine si numerano le istruzioni e si completano i salti.</p>
+
+<h2>2. Conversione tra basi</h2>
+
+<h3>Da base 10 a base $b$: divisioni successive</h3>
+<p>Per un intero non negativo:</p>
+<ol>
+<li>dividi il numero per $b$ e annota il resto;</li>
+<li>ripeti la divisione sul quoziente;</li>
+<li>fermati quando il quoziente diventa zero;</li>
+<li>leggi i resti <strong>dal basso verso l'alto</strong>.</li>
+</ol>
+<div class="box ex">
+<div class="bt">Esempio &mdash; $148_{10}$ in base 7</div>
+<div class="tbl">
+<table>
+<thead><tr><th>Divisione</th><th>Quoziente</th><th>Resto</th></tr></thead>
+<tbody>
+<tr><td>$148 \div 7$</td><td>21</td><td>1</td></tr>
+<tr><td>$21 \div 7$</td><td>3</td><td>0</td></tr>
+<tr><td>$3 \div 7$</td><td>0</td><td>3</td></tr>
+</tbody>
+</table>
+</div>
+<p>Leggendo i resti dal basso: $148_{10}=301_7$. Verifica con i pesi:</p>
+$$301_7=3\cdot7^2+0\cdot7^1+1\cdot7^0=147+0+1=148.$$
+<p>L'ultima cifra pesa $1\cdot7^0=1$, non 7.</p>
+</div>
+
+<h3>Metodo veloce per il binario</h3>
+<p>Se riconosci il numero come somma di potenze di 2, scrivi 1 nelle posizioni delle potenze presenti e 0 nelle altre:</p>
+$$9=8+1=2^3+2^0 \;\Rightarrow\; 9_{10}=1001_2,$$
+$$130=128+2=2^7+2^1 \;\Rightarrow\; 130_{10}=10000010_2.$$
+<p>Non è obbligatorio: se non riconosci subito le potenze, le divisioni successive funzionano sempre.</p>
+
+<h3>Parte frazionaria: moltiplicazioni successive</h3>
+<ol>
+<li>moltiplica la parte frazionaria per 2;</li>
+<li>annota la parte intera ottenuta (0 oppure 1);</li>
+<li>prosegui usando solo la nuova parte frazionaria;</li>
+<li>leggi le cifre <strong>nell'ordine in cui le hai ottenute</strong>.</li>
+</ol>
+<p>Ti fermi quando la parte frazionaria diventa zero o quando raggiungi la precisione richiesta: alcuni numeri non hanno una rappresentazione binaria finita e richiedono un'approssimazione.</p>
+<div class="box ex">
+<div class="bt">Esempio &mdash; $0{,}125_{10}$</div>
+<div class="tbl">
+<table>
+<thead><tr><th>Operazione</th><th>Cifra ottenuta</th><th>Nuova parte frazionaria</th></tr></thead>
+<tbody>
+<tr><td>$0{,}125\cdot2=0{,}25$</td><td>0</td><td>0,25</td></tr>
+<tr><td>$0{,}25\cdot2=0{,}5$</td><td>0</td><td>0,5</td></tr>
+<tr><td>$0{,}5\cdot2=1$</td><td>1</td><td>0</td></tr>
+</tbody>
+</table>
+</div>
+<p>Quindi $0{,}125_{10}=0.001_2$. La conversione è esatta: aggiungere zeri a destra non cambia il valore.</p>
+</div>
+
+<h2>3. Rappresentazione IEEE 754</h2>
+
+<h3>Struttura in precisione singola</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Campo</th><th>Dimensione</th><th>Significato</th></tr></thead>
+<tbody>
+<tr><td>$S$</td><td>1 bit</td><td>Segno</td></tr>
+<tr><td>$E$</td><td>8 bit</td><td>Esponente codificato</td></tr>
+<tr><td>$M$</td><td>23 bit</td><td>Parte frazionaria del significando</td></tr>
+</tbody>
+</table>
+</div>
+<div class="box thm">
+<div class="bt">Numeri normalizzati</div>
+$$x=(-1)^S\cdot(1.M)_2\cdot2^{E-127}, \qquad E=e+127.$$
+<ul>
+<li>$S=0$ per i positivi, $S=1$ per i negativi;</li>
+<li>$e$ è l'esponente effettivo della normalizzazione, $E$ quello memorizzato;</li>
+<li>l'1 prima della virgola è <strong>implicito</strong>: non si scrive nel campo $M$.</li>
+</ul>
+<p>I valori estremi del campo esponente sono riservati a rappresentazioni speciali, quindi la formula vale solo per i normalizzati.</p>
+</div>
+<p>Negli esercizi del corso, se non è indicata una precisione diversa, si assume quella singola. È una convenzione degli esercizi: IEEE 754 prevede anche altri formati.</p>
+
+<div class="box ex">
+<div class="bt">Esempio completo &mdash; codificare $-9{,}125_{10}$</div>
+<ol>
+<li><strong>Segno:</strong> il numero è negativo, quindi $S=1$.</li>
+<li><strong>Valore assoluto:</strong> $9_{10}=1001_2$ e $0{,}125_{10}=0.001_2$, quindi $9{,}125_{10}=1001.001_2$.</li>
+<li><strong>Normalizzazione:</strong> la virgola si sposta di tre posizioni a sinistra: $1001.001_2=1.001001_2\cdot2^3$, cioè $e=3$.</li>
+<li><strong>Esponente codificato:</strong> $E=3+127=130=10000010_2$.</li>
+<li><strong>Campo $M$:</strong> dopo la virgola resta <code>001001</code>; si completa con zeri a destra fino a 23 bit: <code>00100100000000000000000</code>.</li>
+</ol>
+<p>Risultato: <code>1 | 10000010 | 00100100000000000000000</code> (le barre servono solo a distinguere i campi).</p>
+</div>
+
+<h3>Come trovare l'esponente senza confondersi</h3>
+<p>La regola generale è normalizzare il valore assoluto nella forma $|x|=1.M\cdot2^e$. Per questo esercizio $2^3\le9{,}125\lt2^4$, quindi $e=3$: l'esponente è la potenza di 2 più vicina <strong>per difetto</strong>.</p>
+<p>La normalizzazione resta il riferimento generale, anche per i numeri minori di 1, che hanno esponente negativo.</p>
+
+<h2>4. Numeri negativi e numero minimo di bit</h2>
+<p>Esempio guida: rappresentare $-8192$. Si parte dal valore assoluto:</p>
+$$8192=2^{13}=10000000000000_2,$$
+<p>cioè un 1 seguito da 13 zeri: come naturale servono <strong>14 bit</strong>.</p>
+
+<h3>Modulo e segno</h3>
+<p>Il primo bit è il segno, gli altri rappresentano il valore assoluto: servono $1+14=15$ bit.</p>
+<p>Con 14 bit rimarrebbero solo 13 bit per il modulo, insufficienti per 8192.</p>
+
+<h3>Complemento a 1</h3>
+<p>Si fissa la larghezza e si invertono tutti i bit del positivo. Su 15 bit:</p>
+$$+8192 = 010000000000000 \;\longrightarrow\; -8192 = 101111111111111.$$
+<p>L'intervallo su $n$ bit è simmetrico: $-(2^{n-1}-1)\le x\le2^{n-1}-1$. Con 14 bit il minimo sarebbe $-8191$, quindi $-8192$ non ci sta: servono 15 bit.</p>
+
+<h3>Complemento a 2: il caso particolare</h3>
+<p>L'intervallo è asimmetrico:</p>
+$$-2^{n-1}\le x\le2^{n-1}-1.$$
+<p>Con 14 bit: $-8192\le x\le8191$. Quindi $-8192$ <strong>entra già in 14 bit</strong>, con il pattern <code>10000000000000</code>.</p>
+<p>Lo stesso pattern vale 8192 se lo leggi come naturale e $-8192$ se lo leggi in complemento a 2 su 14 bit: è la codifica a dare significato ai bit.</p>
+
+<div class="box thm">
+<div class="bt">Da ricordare &mdash; $-8192$</div>
+<div class="tbl">
+<table>
+<thead><tr><th>Rappresentazione</th><th>Bit minimi</th><th>Codifica</th></tr></thead>
+<tbody>
+<tr><td>Modulo e segno</td><td>15</td><td><code>110000000000000</code></td></tr>
+<tr><td>Complemento a 1</td><td>15</td><td><code>101111111111111</code></td></tr>
+<tr><td>Complemento a 2</td><td>14</td><td><code>10000000000000</code></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="box warn">
+<div class="bt">Attenzione</div>
+<p>Se ti chiedono il minimo numero di bit in complemento a 2, non applicare automaticamente &laquo;aggiungo un bit al valore positivo&raquo;. Controlla sempre l'intervallo: il limite negativo ammette il caso $-2^{n-1}$.</p>
+</div>
+
+<h2>5. La macchina didattica di von Neumann</h2>
+<p>Il modello usato negli esercizi comprende:</p>
+<ul>
+<li>un <strong>nastro di ingresso</strong>, da cui leggere i dati;</li>
+<li>un <strong>nastro di uscita</strong>, su cui scrivere i risultati;</li>
+<li>celle di <strong>memoria</strong> identificate da un indirizzo;</li>
+<li>un <strong>accumulatore</strong>, usato per letture, caricamenti e operazioni aritmetiche;</li>
+<li>un <strong>programma</strong>, cioè una sequenza di istruzioni.</li>
+</ul>
+<p>Notazione: <code>ACC</code> è il contenuto dell'accumulatore, <code>MEM[100]</code> il contenuto della cella 100.</p>
+<p>Un'istruzione ha un <strong>codice operativo</strong> (l'operazione) ed eventualmente un <strong>operando</strong> (a cosa applicarla). Il numero a sinistra di una riga, per esempio 7, è l'<em>indice</em> dell'istruzione, non il suo operando.</p>
+
+<h3>Istruzioni di trasferimento</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Istruzione</th><th>Effetto</th><th>Cosa viene sovrascritto</th></tr></thead>
+<tbody>
+<tr><td><code>READ</code></td><td>legge il prossimo dato in ACC</td><td>il precedente contenuto di ACC</td></tr>
+<tr><td><code>WRITE</code></td><td>scrive ACC sul nastro di uscita</td><td>niente: ACC resta invariato</td></tr>
+<tr><td><code>LOAD x</code></td><td>$\text{ACC}\leftarrow\text{MEM}[x]$</td><td>il precedente contenuto di ACC</td></tr>
+<tr><td><code>STORE x</code></td><td>$\text{MEM}[x]\leftarrow\text{ACC}$</td><td>il precedente contenuto della cella $x$</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>LOAD</code> e <code>STORE</code> <strong>copiano</strong> il valore, non lo tolgono dalla sorgente: dopo <code>STORE</code>, ACC conserva il suo contenuto. Questo permette di inizializzare più celle con un solo caricamento:</p>
+<pre><code>LOAD =0
+STORE 101
+STORE 102</code></pre>
+<p>Dopo la prima <code>STORE</code> in ACC c'è ancora zero, quindi non serve ricaricarlo per la seconda.</p>
+
+<h3>Istruzioni aritmetiche</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Istruzione</th><th>Effetto</th></tr></thead>
+<tbody>
+<tr><td><code>ADD x</code></td><td>$\text{ACC}\leftarrow\text{ACC}+\text{MEM}[x]$</td></tr>
+<tr><td><code>SUB x</code></td><td>$\text{ACC}\leftarrow\text{ACC}-\text{MEM}[x]$</td></tr>
+<tr><td><code>MULT x</code></td><td>$\text{ACC}\leftarrow\text{ACC}\times\text{MEM}[x]$</td></tr>
+<tr><td><code>DIV x</code></td><td>$\text{ACC}\leftarrow\text{ACC}\operatorname{div}\text{MEM}[x]$</td></tr>
+</tbody>
+</table>
+</div>
+<p>Il risultato sostituisce ACC; la cella usata come operando non cambia. <code>DIV</code> è una divisione <strong>intera</strong>: $5\operatorname{div}2=2$, non $2{,}5$. Questo limite viene sfruttato per costruire il controllo di divisibilità.</p>
+
+<h3>Istruzioni di salto</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Istruzione</th><th>Salta all'istruzione $k$ se&hellip;</th></tr></thead>
+<tbody>
+<tr><td><code>BR k</code></td><td>sempre</td></tr>
+<tr><td><code>BEQ k</code></td><td>$\text{ACC}=0$</td></tr>
+<tr><td><code>BGE k</code></td><td>$\text{ACC}\ge0$</td></tr>
+<tr><td><code>BG k</code></td><td>$\text{ACC}\gt0$</td></tr>
+<tr><td><code>BLE k</code></td><td>$\text{ACC}\le0$</td></tr>
+<tr><td><code>BL k</code></td><td>$\text{ACC}\lt0$</td></tr>
+</tbody>
+</table>
+</div>
+<p>Se la condizione è falsa si esegue l'istruzione successiva. I salti confrontano sempre ACC con zero, quindi per confrontare due valori si calcola prima la differenza:</p>
+<pre><code>LOAD 101
+SUB 102
+BEQ ...</code></pre>
+<p>Il salto avviene se $\text{MEM}[101]-\text{MEM}[102]=0$, cioè se i due valori sono uguali.</p>
+
+<h2>6. Indirizzamento: valore, cella, indirizzo</h2>
+<div class="tbl">
+<table>
+<thead><tr><th>Tipo</th><th>Istruzione</th><th>Effetto</th></tr></thead>
+<tbody>
+<tr><td>Immediato</td><td><code>LOAD =5</code></td><td>$\text{ACC}\leftarrow5$: il 5 è il valore stesso</td></tr>
+<tr><td>Diretto</td><td><code>LOAD 100</code></td><td>$\text{ACC}\leftarrow\text{MEM}[100]$</td></tr>
+<tr><td>Indiretto</td><td><code>LOAD @100</code></td><td>$\text{ACC}\leftarrow\text{MEM}[\text{MEM}[100]]$</td></tr>
+</tbody>
+</table>
+</div>
+<p>Nell'indirizzamento indiretto si fanno due passaggi: si legge il contenuto della cella 100 e lo si interpreta come <strong>indirizzo</strong> della cella da cui prendere il dato. È l'idea di <em>puntatore</em>: una cella conserva l'indirizzo di un'altra cella.</p>
+<div class="box ex">
+<div class="bt">Esempio &mdash; i tre indirizzamenti</div>
+<p>Con $\text{MEM}[100]=105$ e $\text{MEM}[105]=5$:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Istruzione</th><th>Valore caricato in ACC</th></tr></thead>
+<tbody>
+<tr><td><code>LOAD =100</code></td><td>100</td></tr>
+<tr><td><code>LOAD 100</code></td><td>105</td></tr>
+<tr><td><code>LOAD @100</code></td><td>5</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Anche <code>STORE</code> può essere indiretto. Con $\text{ACC}=8$ e $\text{MEM}[100]=110$, l'istruzione <code>STORE @100</code> scrive 8 nella cella 110; la cella 100 non cambia e continua a contenere l'indirizzo 110.</p>
+<p>Invece <code>STORE =5</code> non ha senso: una scrittura richiede una cella di destinazione, non un valore letterale.</p>
+
+<h2>7. Metodo per risolvere gli esercizi</h2>
+<p>Percorso consigliato: <strong>testo</strong> &rarr; scelta delle celle &rarr; schema dell'algoritmo &rarr; traduzione dei singoli blocchi &rarr; numerazione delle istruzioni &rarr; completamento dei salti. Non partire subito con un programma di venti righe: separa il problema in operazioni più piccole.</p>
+
+<h3>Capire il testo</h3>
+<p>Individua cosa si legge, cosa si stampa, quando termina la lettura, quali proprietà sono garantite sugli input e quali casi particolari vanno gestiti. In una sequenza di &laquo;interi positivi terminata da zero&raquo; lo zero è solo il terminatore, non un elemento da elaborare; e se il testo garantisce che i dati sono positivi, non servono controlli sui negativi.</p>
+
+<h3>Scegliere le celle</h3>
+<p>Una cella serve quando un'informazione deve sopravvivere mentre l'accumulatore viene usato per altro. Esempi: somma corrente, numero totale di valori, contatore, valore letto da riutilizzare dopo un calcolo, indirizzo della prossima cella libera. Se un dato può essere usato subito e poi scartato, può bastare l'accumulatore.</p>
+
+<h3>Inizializzare</h3>
+<ul>
+<li>Una somma parte da zero: <code>LOAD =0</code>, <code>STORE cella_somma</code>.</li>
+<li>Un puntatore al primo spazio dati: <code>LOAD =110</code>, <code>STORE cella_puntatore</code>.</li>
+<li>Una cella che riceve subito un valore con <code>STORE</code> non ha bisogno di un'inizializzazione precedente: nell'esercizio della media il contatore viene impostato direttamente a $n$.</li>
+</ul>
+
+<h3>Numerare solo alla fine</h3>
+<p>Mentre costruisci il programma scrivi <code>BEQ ...</code> e <code>BR ...</code>; completa tutte le righe, numerale da zero e solo allora sostituisci i puntini con le destinazioni. Così non devi correggere tutti i salti ogni volta che aggiungi o togli una riga.</p>
+
+<h2>8. Esercizio 1 &mdash; Media di $n$ numeri</h2>
+<div class="box ex">
+<div class="bt">Richiesta</div>
+<p>Leggere un numero $n$, poi leggere i successivi $n$ interi e stampare il loro valore medio. Se $n\le0$ il programma termina senza stampare nulla. Poiché <code>DIV</code> è intera, si stampa il quoziente intero di somma e $n$.</p>
+</div>
+
+<h3>Celle</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Cella</th><th>Contenuto</th></tr></thead>
+<tbody>
+<tr><td>101</td><td>$n$ originale (serve per la divisione finale)</td></tr>
+<tr><td>102</td><td>contatore dei valori ancora da leggere</td></tr>
+<tr><td>103</td><td>somma $S$</td></tr>
+</tbody>
+</table>
+</div>
+<p>Il contatore parte da $n$ e si decrementa: così si confronta direttamente con zero. La cella 101 conserva $n$ perché serve alla fine.</p>
+
+<h3>Schema logico</h3>
+<pre><code>S ← 0
+Leggi n
+Se n ≤ 0: termina
+Salva n; contatore ← n
+Ripeti:
+  leggi x
+  S ← S + x
+  contatore ← contatore − 1
+finché contatore = 0
+Stampa S div n</code></pre>
+
+<h3>Programma</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Riga</th><th>Istruzione</th><th>Commento</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><code>LOAD =0</code></td><td></td></tr>
+<tr><td>1</td><td><code>STORE 103</code></td><td>$S=0$</td></tr>
+<tr><td>2</td><td><code>READ</code></td><td>legge $n$</td></tr>
+<tr><td>3</td><td><code>BLE 17</code></td><td>se $n\le0$, fine</td></tr>
+<tr><td>4</td><td><code>STORE 101</code></td><td>salva $n$</td></tr>
+<tr><td>5</td><td><code>STORE 102</code></td><td>contatore $=n$ (ACC non è cambiato)</td></tr>
+<tr><td>6</td><td><code>READ</code></td><td>legge un numero</td></tr>
+<tr><td>7</td><td><code>ADD 103</code></td><td></td></tr>
+<tr><td>8</td><td><code>STORE 103</code></td><td>aggiorna la somma</td></tr>
+<tr><td>9</td><td><code>LOAD 102</code></td><td></td></tr>
+<tr><td>10</td><td><code>SUB =1</code></td><td></td></tr>
+<tr><td>11</td><td><code>STORE 102</code></td><td>decrementa il contatore</td></tr>
+<tr><td>12</td><td><code>BEQ 14</code></td><td>se ha finito, calcola la media</td></tr>
+<tr><td>13</td><td><code>BR 6</code></td><td>altrimenti legge il successivo</td></tr>
+<tr><td>14</td><td><code>LOAD 103</code></td><td></td></tr>
+<tr><td>15</td><td><code>DIV 101</code></td><td>$S\operatorname{div}n$</td></tr>
+<tr><td>16</td><td><code>WRITE</code></td><td></td></tr>
+<tr><td>17</td><td><code>END</code></td><td></td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Perché non serve una cella per ogni numero letto?</strong> Dopo <code>READ</code> il numero è già in ACC: basta aggiungerlo alla somma e salvare il totale. Il singolo valore non serve più.</p>
+
+<h2>9. Calcolare un resto senza istruzione dedicata</h2>
+<p>Per numeri positivi, la divisione intera dà $n=dq+r$, con $d$ divisore, $q=n\operatorname{div}d$ e $r$ resto. Quindi $r=n-dq$. Nella macchina del corso è più comodo calcolare il contrario,</p>
+$$dq-n=-r,$$
+<p>perché il prodotto $dq$ è già nell'accumulatore.</p>
+
+<h3>Test di parità</h3>
+<p>Se $n$ è nella cella 101 e anche in ACC:</p>
+<pre><code>DIV =2
+MULT =2
+SUB 101</code></pre>
+<p>si ottiene $2(n\operatorname{div}2)-n$.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Numero</th><th>Divisione intera</th><th>Prodotto per 2</th><th>Differenza</th></tr></thead>
+<tbody>
+<tr><td>8</td><td>4</td><td>8</td><td>0</td></tr>
+<tr><td>9</td><td>4</td><td>8</td><td>$-1$</td></tr>
+</tbody>
+</table>
+</div>
+<p>Zero significa <strong>pari</strong>, valore negativo significa <strong>dispari</strong>. Questo collegamento vale per gli interi positivi previsti dagli esercizi: non estenderlo ad altri domini senza verificare la divisione.</p>
+
+<h2>10. Esercizio 2 &mdash; Somma dei numeri pari, terminatore zero</h2>
+<div class="box ex">
+<div class="bt">Richiesta</div>
+<p>Leggere una sequenza di interi positivi terminata da zero e stampare la somma dei soli numeri pari.</p>
+</div>
+<div class="tbl">
+<table>
+<thead><tr><th>Cella</th><th>Contenuto</th></tr></thead>
+<tbody>
+<tr><td>101</td><td>numero letto $n$</td></tr>
+<tr><td>102</td><td>somma dei pari</td></tr>
+</tbody>
+</table>
+</div>
+<p>Il numero va salvato: il test di parità modifica ACC, ma se $n$ è pari bisogna recuperarlo per sommarlo.</p>
+<pre><code>S ← 0
+Leggi n
+Se n = 0: stampa S e termina
+Salva n
+Calcola il resto negativo della divisione per 2
+Se dispari: torna alla lettura
+S ← S + n
+Torna alla lettura</code></pre>
+<div class="tbl">
+<table>
+<thead><tr><th>Riga</th><th>Istruzione</th><th>Commento</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><code>LOAD =0</code></td><td></td></tr>
+<tr><td>1</td><td><code>STORE 102</code></td><td>$S=0$</td></tr>
+<tr><td>2</td><td><code>READ</code></td><td></td></tr>
+<tr><td>3</td><td><code>BEQ 13</code></td><td>terminatore: vai alla stampa</td></tr>
+<tr><td>4</td><td><code>STORE 101</code></td><td>salva $n$</td></tr>
+<tr><td>5</td><td><code>DIV =2</code></td><td></td></tr>
+<tr><td>6</td><td><code>MULT =2</code></td><td></td></tr>
+<tr><td>7</td><td><code>SUB 101</code></td><td>0 se pari, $-1$ se dispari</td></tr>
+<tr><td>8</td><td><code>BL 2</code></td><td>dispari: legge il successivo</td></tr>
+<tr><td>9</td><td><code>LOAD 101</code></td><td>recupera $n$</td></tr>
+<tr><td>10</td><td><code>ADD 102</code></td><td></td></tr>
+<tr><td>11</td><td><code>STORE 102</code></td><td></td></tr>
+<tr><td>12</td><td><code>BR 2</code></td><td></td></tr>
+<tr><td>13</td><td><code>LOAD 102</code></td><td></td></tr>
+<tr><td>14</td><td><code>WRITE</code></td><td></td></tr>
+<tr><td>15</td><td><code>END</code></td><td></td></tr>
+</tbody>
+</table>
+</div>
+<div class="box warn">
+<div class="bt">Punto delicato</div>
+<p>Alla riga 9 bisogna ricaricare il numero originale: dopo il test di parità in ACC c'è il resto negativo, non $n$. Sommare direttamente ACC significherebbe sommare zero per ogni numero pari.</p>
+</div>
+
+<h2>11. Esercizio 3 &mdash; Somma dei pari in posizione dispari</h2>
+<div class="box ex">
+<div class="bt">Richiesta</div>
+<p>Leggere una sequenza di interi positivi terminata da <strong>1</strong> e stampare la somma dei valori che sono numericamente pari <strong>e</strong> occupano una posizione dispari. Il terminatore 1 non fa parte della sequenza; le posizioni si contano da 1.</p>
+<p>Sequenza <code>2 5 7 9 2 1</code>: le posizioni dispari contengono 2, 7, 2; i pari tra questi sono 2 e 2, quindi $S=4$. Se il primo input è 1, la sequenza è vuota e si stampa zero.</p>
+</div>
+
+<h3>Il trucco: due letture per iterazione</h3>
+<p>Non serve un contatore di posizione. In ogni iterazione:</p>
+<ol>
+<li>leggi una posizione dispari e valuta il numero;</li>
+<li>leggi la posizione pari successiva e scartala;</li>
+<li>ripeti.</li>
+</ol>
+<p>L'alternanza dispari &rarr; pari &rarr; dispari &rarr; &hellip; è garantita dalla struttura del programma. Il terminatore va però controllato dopo <strong>entrambe</strong> le letture.</p>
+<p>I salti confrontano ACC con zero, quindi <code>SUB =1</code> seguito da <code>BEQ</code> controlla se il valore letto era 1. In posizione dispari il numero va salvato (servirà per il test di parità e per la somma); in posizione pari non serve, perché verrà scartato.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Cella</th><th>Contenuto</th></tr></thead>
+<tbody>
+<tr><td>100</td><td>numero letto in posizione dispari</td></tr>
+<tr><td>101</td><td>somma</td></tr>
+</tbody>
+</table>
+</div>
+<div class="tbl">
+<table>
+<thead><tr><th>Riga</th><th>Istruzione</th><th>Commento</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><code>LOAD =0</code></td><td></td></tr>
+<tr><td>1</td><td><code>STORE 101</code></td><td>$S=0$</td></tr>
+<tr><td>2</td><td><code>READ</code></td><td>posizione dispari</td></tr>
+<tr><td>3</td><td><code>STORE 100</code></td><td>salva il numero</td></tr>
+<tr><td>4</td><td><code>SUB =1</code></td><td></td></tr>
+<tr><td>5</td><td><code>BEQ 18</code></td><td>era il terminatore: stampa</td></tr>
+<tr><td>6</td><td><code>LOAD 100</code></td><td></td></tr>
+<tr><td>7</td><td><code>DIV =2</code></td><td></td></tr>
+<tr><td>8</td><td><code>MULT =2</code></td><td></td></tr>
+<tr><td>9</td><td><code>SUB 100</code></td><td>0 se pari, $-1$ se dispari</td></tr>
+<tr><td>10</td><td><code>BL 14</code></td><td>dispari: salta la somma</td></tr>
+<tr><td>11</td><td><code>LOAD 101</code></td><td></td></tr>
+<tr><td>12</td><td><code>ADD 100</code></td><td></td></tr>
+<tr><td>13</td><td><code>STORE 101</code></td><td>aggiorna la somma</td></tr>
+<tr><td>14</td><td><code>READ</code></td><td>posizione pari: dato scartato</td></tr>
+<tr><td>15</td><td><code>SUB =1</code></td><td></td></tr>
+<tr><td>16</td><td><code>BEQ 18</code></td><td>terminatore anche qui</td></tr>
+<tr><td>17</td><td><code>BR 2</code></td><td>nuova coppia di posizioni</td></tr>
+<tr><td>18</td><td><code>LOAD 101</code></td><td></td></tr>
+<tr><td>19</td><td><code>WRITE</code></td><td></td></tr>
+<tr><td>20</td><td><code>END</code></td><td></td></tr>
+</tbody>
+</table>
+</div>
+<div class="box warn">
+<div class="bt">Perché <code>BL 14</code> e non <code>BL 2</code>?</div>
+<p>Se il numero in posizione dispari è dispari, va saltato solo l'aggiornamento della somma: il numero successivo, in posizione pari, va comunque letto e scartato. Tornare alla riga 2 farebbe trattare la posizione pari come dispari e romperebbe l'alternanza.</p>
+</div>
+
+<h2>12. Esercizio 4 &mdash; Somma degli estremi (indirizzamento indiretto)</h2>
+<div class="box ex">
+<div class="bt">Richiesta</div>
+<p>Leggere una sequenza di interi positivi terminata da zero e stampare primo + ultimo, secondo + penultimo, terzo + terzultimo, e così via. Se resta un elemento centrale, va stampato da solo, non sommato a se stesso.</p>
+<p>Ingresso <code>2 5 7 9 4 0</code> &rarr; uscita <code>6 14 7</code>, cioè $2+4$, $5+9$, e $7$ da solo.</p>
+</div>
+
+<h3>Perché bisogna memorizzare la sequenza</h3>
+<p>Quando leggi il primo numero non conosci ancora l'ultimo, e la lunghezza non è nota in anticipo. Bisogna quindi conservare i dati e usare una cella che contiene l'<strong>indirizzo</strong> della destinazione corrente.</p>
+
+<h3>Organizzazione della memoria</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Cella</th><th>Ruolo</th></tr></thead>
+<tbody>
+<tr><td>100</td><td>puntatore di scrittura; poi indirizzo dell'estremo destro (coda)</td></tr>
+<tr><td>101</td><td>indirizzo dell'estremo sinistro (testa)</td></tr>
+<tr><td>110 in poi</td><td>valori della sequenza</td></tr>
+</tbody>
+</table>
+</div>
+<p>All'inizio $\text{MEM}[100]=\text{MEM}[101]=110$. I dati vengono salvati in 110, 111, 112, &hellip; con <code>STORE @100</code>, incrementando ogni volta il contenuto della cella 100.</p>
+
+<h3>L'indirizzo &laquo;uno oltre&raquo;</h3>
+<p>Quando arriva zero, il puntatore indica già la <strong>prossima cella libera</strong>, non l'ultimo dato. Prima delle somme va decrementato:</p>
+<pre><code>LOAD 100
+SUB =1
+STORE 100</code></pre>
+
+<h3>Movimento degli estremi</h3>
+<p>Dopo ogni coppia: testa $\leftarrow$ testa $+1$, coda $\leftarrow$ coda $-1$. Per decidere se proseguire si calcola $D=\text{coda}-\text{testa}$:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>$D$</th><th>Situazione</th><th>Azione</th></tr></thead>
+<tbody>
+<tr><td>$D\gt0$</td><td>due estremi distinti</td><td>sommarli e stamparli</td></tr>
+<tr><td>$D=0$</td><td>un solo elemento centrale</td><td>stamparlo da solo</td></tr>
+<tr><td>$D\lt0$</td><td>estremi incrociati, oppure sequenza vuota</td><td>terminare</td></tr>
+</tbody>
+</table>
+</div>
+<p>Il controllo va fatto <em>prima</em> della somma: altrimenti un elemento singolo sarebbe elaborato come &laquo;elemento + se stesso&raquo;.</p>
+
+<h3>Programma</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Riga</th><th>Istruzione</th><th>Commento</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><code>LOAD =110</code></td><td></td></tr>
+<tr><td>1</td><td><code>STORE 100</code></td><td>puntatore di scrittura</td></tr>
+<tr><td>2</td><td><code>STORE 101</code></td><td>testa (ACC invariato)</td></tr>
+<tr><td>3</td><td><code>READ</code></td><td></td></tr>
+<tr><td>4</td><td><code>BEQ 10</code></td><td>terminatore: fine lettura</td></tr>
+<tr><td>5</td><td><code>STORE @100</code></td><td>salva il dato nella cella puntata</td></tr>
+<tr><td>6</td><td><code>LOAD 100</code></td><td></td></tr>
+<tr><td>7</td><td><code>ADD =1</code></td><td></td></tr>
+<tr><td>8</td><td><code>STORE 100</code></td><td>avanza il puntatore</td></tr>
+<tr><td>9</td><td><code>BR 3</code></td><td></td></tr>
+<tr><td>10</td><td><code>LOAD 100</code></td><td></td></tr>
+<tr><td>11</td><td><code>SUB =1</code></td><td></td></tr>
+<tr><td>12</td><td><code>STORE 100</code></td><td>coda = indirizzo dell'ultimo dato</td></tr>
+<tr><td>13</td><td><code>SUB 101</code></td><td>$D=\text{coda}-\text{testa}$</td></tr>
+<tr><td>14</td><td><code>BL 28</code></td><td>$D\lt0$: fine</td></tr>
+<tr><td>15</td><td><code>BEQ 26</code></td><td>$D=0$: elemento centrale</td></tr>
+<tr><td>16</td><td><code>LOAD @100</code></td><td>dato in coda</td></tr>
+<tr><td>17</td><td><code>ADD @101</code></td><td>+ dato in testa</td></tr>
+<tr><td>18</td><td><code>WRITE</code></td><td></td></tr>
+<tr><td>19</td><td><code>LOAD 101</code></td><td></td></tr>
+<tr><td>20</td><td><code>ADD =1</code></td><td></td></tr>
+<tr><td>21</td><td><code>STORE 101</code></td><td>testa $+1$</td></tr>
+<tr><td>22</td><td><code>LOAD 100</code></td><td></td></tr>
+<tr><td>23</td><td><code>SUB =1</code></td><td></td></tr>
+<tr><td>24</td><td><code>STORE 100</code></td><td>coda $-1$</td></tr>
+<tr><td>25</td><td><code>BR 13</code></td><td></td></tr>
+<tr><td>26</td><td><code>LOAD @100</code></td><td>elemento centrale</td></tr>
+<tr><td>27</td><td><code>WRITE</code></td><td></td></tr>
+<tr><td>28</td><td><code>END</code></td><td></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box ex">
+<div class="bt">Esempio &mdash; ingresso 2, 5, 7, 9, 4, 0</div>
+<p>Dopo la lettura i dati sono in 110&ndash;114 e il puntatore vale 115; dopo il decremento la coda è 114, la testa è 110.</p>
+<ul>
+<li>$D=4$: $2+4=6$; testa 111, coda 113;</li>
+<li>$D=2$: $5+9=14$; testa 112, coda 112;</li>
+<li>$D=0$: si stampa $7$ da solo.</li>
+</ul>
+<p>Uscita: <code>6 14 7</code>. Se arriva subito 0, alla riga 13 si ha $D=-1$ e il programma termina senza stampare.</p>
+</div>
+
+<h3>Perché alla riga 13 non c'è <code>LOAD 100</code>?</h3>
+<p>È un'ottimizzazione basata sul contenuto di ACC. Si arriva alla riga 13 da due percorsi: dopo la riga 12, o dopo la riga 24 con il salto <code>BR 13</code>. In entrambi i casi ACC contiene già la coda aggiornata, perché <code>STORE</code> non cancella l'accumulatore. Quindi <code>SUB 101</code> calcola direttamente coda $-$ testa. Aggiungere un <code>LOAD 100</code> renderebbe il blocco più esplicito, ma obbligherebbe a rinumerare le istruzioni e a correggere i salti.</p>
+
+<h3>Non confondere indirizzi e dati</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Scopo</th><th>Istruzioni</th><th>Cosa si legge</th></tr></thead>
+<tbody>
+<tr><td>Confrontare le posizioni</td><td><code>LOAD 100</code>, <code>SUB 101</code></td><td>gli <strong>indirizzi</strong> contenuti nelle celle</td></tr>
+<tr><td>Sommare gli estremi</td><td><code>LOAD @100</code>, <code>ADD @101</code></td><td>i <strong>dati</strong> nelle celle puntate</td></tr>
+</tbody>
+</table>
+</div>
+<p>Le stesse celle 100 e 101 servono a manipolare indirizzi oppure a raggiungere i valori, a seconda della presenza di <code>@</code>.</p>
+
+<h2>13. Errori da evitare</h2>
+<div class="box warn">
+<div class="bt">Attenzione</div>
+<ul>
+<li><strong>Perdere un valore ancora necessario.</strong> Dopo <code>READ</code> e <code>SUB =1</code> il numero originale non è più in ACC: se serve ancora, salvalo prima. Non serve invece conservarlo se verrà scartato (posizioni pari dell'Esercizio 3).</li>
+<li><strong>Credere che <code>STORE</code> svuoti ACC.</strong> Copia in memoria e lascia ACC invariato: permette inizializzazioni multiple e alcune ottimizzazioni.</li>
+<li><strong>Sommare il risultato del controllo invece del numero.</strong> Dopo il test di parità ACC contiene il resto negativo: carica il numero prima di aggiornare la somma.</li>
+<li><strong>Dimenticare un salto di ritorno.</strong> Senza <code>BR</code> il programma prosegue nelle righe successive anche quando dovrebbe ripetere il ciclo.</li>
+<li><strong>Dimenticare il terminatore nella seconda lettura.</strong> Con due letture per iterazione il terminatore può comparire in entrambe.</li>
+<li><strong>Confondere <code>LOAD =100</code>, <code>LOAD 100</code> e <code>LOAD @100</code>:</strong> valore 100, contenuto della cella 100, contenuto della cella puntata dalla cella 100.</li>
+<li><strong>Confrontare i dati invece degli indirizzi</strong> per decidere la fine dell'attraversamento: due valori uguali possono stare in posizioni diverse.</li>
+</ul>
+</div>
+
+<h2>14. Riepilogo finale</h2>
+<div class="tbl">
+<table>
+<thead><tr><th>Argomento</th><th>Da ricordare</th></tr></thead>
+<tbody>
+<tr><td>Intero base 10 &rarr; base $b$</td><td>divisioni successive, resti letti dal basso</td></tr>
+<tr><td>Frazione base 10 &rarr; base 2</td><td>moltiplicazioni successive, cifre nell'ordine ottenuto</td></tr>
+<tr><td>IEEE 754 singola</td><td>1 bit segno | 8 bit esponente | 23 bit frazione; $E=e+127$</td></tr>
+<tr><td>Minimo bit per $-8192$</td><td>15 in modulo e segno, 15 in complemento a 1, 14 in complemento a 2</td></tr>
+</tbody>
+</table>
+</div>
+<div class="tbl">
+<table>
+<thead><tr><th>Istruzione</th><th>Effetto</th></tr></thead>
+<tbody>
+<tr><td><code>READ</code></td><td>legge in ACC</td></tr>
+<tr><td><code>WRITE</code></td><td>stampa ACC</td></tr>
+<tr><td><code>LOAD x</code></td><td>carica $\text{MEM}[x]$</td></tr>
+<tr><td><code>STORE x</code></td><td>salva ACC in $\text{MEM}[x]$</td></tr>
+<tr><td><code>LOAD =x</code></td><td>carica il valore $x$</td></tr>
+<tr><td><code>LOAD @x</code></td><td>carica $\text{MEM}[\text{MEM}[x]]$</td></tr>
+<tr><td><code>BEQ k</code> / <code>BL k</code> / <code>BLE k</code> / <code>BR k</code></td><td>salta se $\text{ACC}=0$ / $\lt0$ / $\le0$ / sempre</td></tr>
+</tbody>
+</table>
+</div>
+<p>Le operazioni di copia non cancellano la sorgente; le operazioni aritmetiche aggiornano l'accumulatore.</p>
+
+<p>Metodo di lavoro:</p>
+<ol>
+<li>capisci input, output e terminatore;</li>
+<li>scegli le celle necessarie;</li>
+<li>disegna il flusso;</li>
+<li>traduci un blocco alla volta;</li>
+<li>controlla cosa contiene ACC;</li>
+<li>numera le istruzioni;</li>
+<li>completa i salti;</li>
+<li>prova i casi limite.</li>
+</ol>
+<p>Casi limite utili in questa esercitazione: $n\le0$ nella media, terminatore come primo input, numeri tutti dispari, terminatore nella seconda lettura, sequenza vuota, sequenza con un solo elemento, sequenze di lunghezza pari e dispari.</p>

@@ -21,12 +21,14 @@ var days = [
   {
     n: 1,
     title: 'Rappresentazione dell\u2019informazione e sistemi di numerazione',
-    file: 'appunti/day-01.html'
+    file: 'appunti/day-01.html',
+    date: '2026-09-22'
   },
   {
     n: 2,
     title: 'Elaborazione dell\u2019informazione',
-    file: 'appunti/day-02.html'
+    file: 'appunti/day-02.html',
+    date: '2026-09-29'
   },
   {
     n: 3,
@@ -48,8 +50,14 @@ var esercitazioni = [
   {
     n: 1,
     title: 'Rappresentazione dell\u2019informazione',
-    file: 'appunti/esercitazione-1.html'
-    /* date: 'aaaa-mm-gg'  (facoltativa) */
+    file: 'appunti/esercitazione-1.html',
+    date: '2026-09-24' /* date: 'aaaa-mm-gg'  (facoltativa) */
+  },
+  {
+    n: 2,
+    title: 'Conversioni, IEEE 754 e programmi in assembler',
+    file: 'appunti/esercitazione-2.html',
+    date: '2026-10-08' /* date: 'aaaa-mm-gg'  (facoltativa) */
   }
 ];
 esercitazioni.sort(function (a, b) { return a.n - b.n; });
@@ -119,8 +127,12 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!h.id) h.id = 'sec-' + (++i);
       var b = document.createElement('button');
       b.className = 'toc-i' + (h.tagName === 'H3' ? ' sub' : '');
-      b.textContent = h.textContent;
-      b.title = h.textContent;
+
+      b.innerHTML = h.innerHTML;
+      var plain = h.cloneNode(true);
+      Array.prototype.forEach.call(plain.querySelectorAll('.katex-mathml'), function (n) { n.remove(); });
+      b.title = plain.textContent;
+      
       tocHeads.push(h); tocItems.push(b);
       b.addEventListener('click', function () {
         h.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -509,5 +521,5 @@ document.addEventListener('DOMContentLoaded', function () {
   buildModeMenu();
   buildMenu();
   show(startIdx, false, false);
-  if (!window.renderMathInElement) window.addEventListener('load', renderMath);
+  if (!window.renderMathInElement) window.addEventListener('load', function () { renderMath(); buildToc(); });
 });

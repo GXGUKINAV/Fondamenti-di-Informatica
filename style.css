@@ -218,13 +218,13 @@ body:not(.side) .toc-fab[aria-expanded="true"] svg { transform: rotate(270deg); 
 .toc.closing { animation: tocout .22s ease-in forwards; pointer-events: none; }
 @keyframes tocout { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(.6); } }
 /* Scrollbar sottile e grigia, senza frecce né rettangolo bianco, staccata dagli angoli arrotondati */
-.toc { overscroll-behavior: contain; }
-.toc::-webkit-scrollbar { width: 8px; }
-.toc::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
-.toc::-webkit-scrollbar-track { background: transparent; margin: 16px 0; }
-.toc::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--muted) 55%, transparent); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+.toc, .day-menu { overscroll-behavior: contain; }
+.toc::-webkit-scrollbar, .day-menu::-webkit-scrollbar { width: 8px; }
+.toc::-webkit-scrollbar-button, .day-menu::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+.toc::-webkit-scrollbar-track, .day-menu::-webkit-scrollbar-track { background: transparent; margin: 16px 0; }
+.toc::-webkit-scrollbar-thumb, .day-menu::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--muted) 55%, transparent); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
 @supports not selector(::-webkit-scrollbar) {
-  .toc { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--muted) 55%, transparent) transparent; }
+  .toc, .day-menu { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--muted) 55%, transparent) transparent; }
 }
 .dots:disabled { opacity: .45; cursor: default; }
 .dots:disabled:hover { background: transparent; }
