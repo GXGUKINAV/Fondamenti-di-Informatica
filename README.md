@@ -10,5 +10,6 @@ Spiegava meglio Zani, e che cazzo
 
 ### Esercitazioni:
 1. Rappresentazione dell’informazione
+2. Conversioni, IEEE 754 e programmi in assembler
 
 https://gxgukinav.github.io/Fondamenti-di-Informatica/
