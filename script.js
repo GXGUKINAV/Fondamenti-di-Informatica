@@ -35,6 +35,12 @@ var days = [
     title: 'Dall\u2019assembler al C: variabili, condizioni, cicli e array',
     file: 'appunti/day-03.html',
     date: '2026-10-06'
+  },
+  {
+    n: 4,
+    title: 'Progettazione degli algoritmi, sintassi C e tipi di dato',
+    file: 'appunti/day-04.html',
+    date: '2026-10-13'
   }
 ];
 days.sort(function (a, b) { return a.n - b.n; });

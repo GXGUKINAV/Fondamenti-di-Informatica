@@ -1,0 +1,666 @@
+<h2>1. Prima si progetta, poi si scrive il codice</h2>
+<p>Il messaggio iniziale del professore è: un algoritmo va pensato <strong>prima</strong> di mettersi alla tastiera. Scrivere direttamente codice, senza una visione complessiva, rischia di produrre una soluzione incompleta o difficile da correggere.</p>
+<p>Quando un problema è troppo articolato per essere risolto tutto insieme, conviene:</p>
+<ol>
+<li>individuare gli ingressi e i risultati richiesti;</li>
+<li>descrivere a grandi linee i passaggi della soluzione;</li>
+<li>suddividere i passaggi complessi in sottoproblemi;</li>
+<li>dettagliare ogni sottoproblema;</li>
+<li>assemblare e verificare la soluzione completa.</li>
+</ol>
+<p>Nelle slide, per esempio, il problema della sostituzione di una parola in un testo viene scomposto in lettura delle parole, memorizzazione negli array, confronto e scrittura del risultato. Le parti ancora da sviluppare vengono inizialmente indicate con descrizioni tra parentesi quadre: sono <strong>segnaposto</strong> nello pseudocodice, non istruzioni C.</p>
+
+<h3>Il significato di &laquo;divide et impera&raquo; in questa lezione</h3>
+<p>Il professore usa l'espressione per indicare l'idea di &laquo;fare a fette&raquo; un problema, conservando però una visione d'insieme: prima si descrive la soluzione complessiva, poi si approfondiscono i singoli pezzi.</p>
+
+<h3>Una soluzione funzionante non è necessariamente la migliore</h3>
+<p>Il lavoro non termina appena il programma sembra funzionare. Bisogna chiedersi:</p>
+<ul>
+<li>fa davvero ciò che richiede il problema?</li>
+<li>funziona anche nei casi limite?</li>
+<li>ci sono passaggi inutili?</li>
+<li>si può rendere più chiaro o più efficiente?</li>
+</ul>
+<p>Lo stesso spirito critico va mantenuto quando si usa un'IA generativa: il codice ricevuto non deve essere accettato automaticamente, ma <strong>compreso e verificato</strong>.</p>
+
+<h2>2. Dal progetto al programma eseguibile</h2>
+<p>Il percorso presentato a lezione è:</p>
+<p>progettazione dell'algoritmo &rarr; scrittura del codice C &rarr; compilazione &rarr; produzione dell'eseguibile &rarr; esecuzione e verifica.</p>
+<p>Il compilatore controlla il codice e lo traduce, ma una compilazione riuscita non dimostra che l'algoritmo sia corretto. Un programma può essere sintatticamente valido e calcolare comunque un risultato sbagliato.</p>
+
+<h3>Errori e warning</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Diagnostica</th><th>Significato</th><th>Conseguenza tipica</th></tr></thead>
+<tbody>
+<tr><td>Errore</td><td>Il compilatore rileva un problema che impedisce di completare correttamente la compilazione</td><td>Non si ottiene un nuovo eseguibile valido</td></tr>
+<tr><td>Warning</td><td>Il compilatore segnala qualcosa di sospetto o problematico</td><td>La compilazione può continuare</td></tr>
+</tbody>
+</table>
+</div>
+<p>Esempi discussi: usare una variabile non dichiarata provoca un errore; dichiarare una variabile e non usarla può produrre un warning. I warning non vanno ignorati a priori: alcuni segnalano problemi importanti, anche se non bloccano la compilazione.</p>
+
+<h2>3. Struttura fondamentale di un programma C</h2>
+<p>Una struttura di riferimento (somma di due interi, come nelle slide) è:</p>
+<pre><code>#include &lt;stdio.h&gt;
+
+int main(void)
+{
+  /* Parte dichiarativa */
+  int a, b, somma;
+
+  /* Parte esecutiva */
+  printf("Inserisci due numeri interi:\n");
+  scanf("%d%d", &amp;a, &amp;b);
+  somma = a + b;
+  printf("La somma e': %d\n", somma);
+  return 0;
+}</code></pre>
+<p>Per ora si assume che l'utente inserisca dati validi; il controllo dell'esito di <code>scanf</code> viene spiegato più avanti. Le parti principali sono:</p>
+<ul>
+<li><strong>direttive del preprocessore:</strong> per esempio <code>#include</code>;</li>
+<li><strong>funzione <code>main</code>:</strong> punto d'ingresso del programma;</li>
+<li><strong>parte dichiarativa:</strong> variabili e costanti;</li>
+<li><strong>parte esecutiva:</strong> istruzioni che realizzano l'algoritmo.</li>
+</ul>
+
+<div class="box warn">
+<div class="bt">Precisazione importante: <code>int main(void)</code>, non <code>void main()</code></div>
+<p>Nella spiegazione orale e in alcune slide compare <code>void main()</code>. Per i normali programmi eseguiti sotto un sistema operativo, la forma standard da usare è:</p>
+<pre><code>int main(void)
+{
+  return 0;
+}</code></pre>
+<p><code>int</code> indica il tipo del valore restituito; <code>void</code> dentro le parentesi indica che non ci sono parametri; <code>return 0;</code> comunica una terminazione riuscita. <code>void main()</code> non è un'alternativa standard equivalente: alcuni compilatori possono accettarla come estensione.</p>
+</div>
+
+<h3>Commenti</h3>
+<pre><code>/* Questo e' un commento */
+
+/*
+  Questo commento
+  occupa piu' righe.
+*/</code></pre>
+<p>Servono a spiegare il codice, soprattutto le scelte non ovvie. Non sono istruzioni da eseguire.</p>
+
+<h2>4. Il preprocessore e <code>#include</code></h2>
+<p>La direttiva <code>#include &lt;stdio.h&gt;</code> fa includere al preprocessore il contenuto dell'header <code>stdio.h</code>, che contiene, tra le altre cose, le dichiarazioni di <code>printf</code> e <code>scanf</code>. La relazione da ricordare è:</p>
+<ol>
+<li><code>#include &lt;stdio.h&gt;</code>;</li>
+<li>il compilatore conosce le dichiarazioni di <code>printf</code> e <code>scanf</code>;</li>
+<li>possiamo usarle correttamente nel nostro codice.</li>
+</ol>
+
+<div class="box warn">
+<div class="bt">Header e libreria non sono la stessa cosa</div>
+<p>Dire &laquo;includiamo la libreria&raquo; è una semplificazione. Più precisamente includiamo un file <strong>header</strong>: <code>stdio.h</code> fornisce le dichiarazioni necessarie, non una copia di tutta l'implementazione di <code>printf</code> e <code>scanf</code>.</p>
+</div>
+<p>Le direttive del preprocessore non sono normali istruzioni esecutive e <strong>non richiedono il punto e virgola finale</strong>:</p>
+<pre><code>#include &lt;stdio.h&gt;
+#define DIMENSIONE 100</code></pre>
+<p>Entrambe operano prima della compilazione vera e propria.</p>
+
+<h2>5. Variabili, dichiarazioni e tipi</h2>
+<p>Prima di usare una variabile bisogna <strong>dichiararla</strong>, specificandone tipo e nome:</p>
+<pre><code>int numero;
+float temperatura;
+char carattere;</code></pre>
+<p>Più variabili dello stesso tipo possono essere dichiarate insieme:</p>
+<pre><code>int numero, somma, contatore;</code></pre>
+<p>Il tipo della variabile resta lo stesso durante la sua vita: una variabile dichiarata <code>int</code> non diventa successivamente <code>float</code>.</p>
+
+<h3>Dichiarare e inizializzare sono due cose diverse</h3>
+<pre><code>int somma;       /* Dichiarazione */
+somma = 0;       /* Assegnamento di un valore iniziale */
+
+int somma = 0;   /* Dichiarazione con inizializzazione */</code></pre>
+<p>Il professore suggerisce di raccogliere le dichiarazioni all'inizio del programma, così da rendere subito visibili le variabili impiegate.</p>
+
+<div class="box warn">
+<div class="bt">Attenzione ai nomi</div>
+<p>Maiuscole e minuscole sono distinte: <code>somma</code>, <code>Somma</code> e <code>SOMMA</code> sono tre identificatori diversi. Scrivere un nome diverso da quello dichiarato può causare un errore.</p>
+</div>
+
+<h2>6. Che cos'è un tipo di dato?</h2>
+<div class="box def">
+<div class="bt">Definizione &mdash; Tipo di dato</div>
+<p>Un tipo di dato definisce:</p>
+<ol>
+<li>un <strong>insieme di valori</strong>;</li>
+<li>un <strong>insieme di operazioni</strong> applicabili a quei valori.</li>
+</ol>
+</div>
+<p>Per esempio, un tipo intero stabilisce quali numeri sono rappresentabili e quali operazioni si possono eseguire. Il tipo è anche un'<strong>astrazione</strong>: possiamo scrivere <code>23 + 74</code> senza dover conoscere, ogni volta, la rappresentazione in bit e l'algoritmo interno della somma.</p>
+
+<h3>Classificazione</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Classificazione</th><th>Esempi</th><th>Idea</th></tr></thead>
+<tbody>
+<tr><td>Tipi semplici</td><td><code>int</code>, <code>float</code>, <code>char</code></td><td>Il valore viene trattato unitariamente</td></tr>
+<tr><td>Tipi strutturati</td><td>Array</td><td>Il valore è composto da elementi accessibili separatamente</td></tr>
+<tr><td>Tipi predefiniti</td><td>Tipi già disponibili nel linguaggio</td><td>Non dobbiamo costruirli noi</td></tr>
+<tr><td>Tipi definiti dall'utente</td><td>Enumerazioni, alias con <code>typedef</code></td><td>Descrivono meglio i dati del problema</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>7. I tipi fondamentali: <code>int</code>, <code>float</code>, <code>char</code></h2>
+<div class="tbl">
+<table>
+<thead><tr><th>Tipo</th><th>Utilizzo principale</th><th>Esempio</th></tr></thead>
+<tbody>
+<tr><td><code>int</code></td><td>Numeri interi</td><td><code>int eta = 19;</code></td></tr>
+<tr><td><code>float</code></td><td>Numeri con parte frazionaria, con precisione limitata</td><td><code>float prezzo = 12.50f;</code></td></tr>
+<tr><td><code>char</code></td><td>Caratteri e relativi valori numerici</td><td><code>char iniziale = 'M';</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Sono i tre tipi su cui si concentra inizialmente il corso.</p>
+
+<h3>Varianti da conoscere</h3>
+<ul>
+<li>Interi: <code>short int</code>, <code>long int</code>, <code>unsigned int</code>.</li>
+<li>Virgola mobile: <code>double</code>, <code>long double</code>.</li>
+</ul>
+<p>Le varianti modificano caratteristiche come intervallo rappresentabile e precisione. Non bisogna però immaginare che ogni passaggio garantisca sempre il raddoppio dello spazio: nelle slide le dimensioni sono indicate con relazioni &laquo;minore o uguale&raquo;.</p>
+
+<h2>8. Costanti con <code>const</code></h2>
+<p>Se un valore non deve cambiare durante l'esecuzione, si può dichiarare un oggetto <code>const</code>:</p>
+<pre><code>const float PI_GRECO = 3.1415f;
+const int SOGLIA = 100;
+const char TERMINATORE = '#';</code></pre>
+<p>Un successivo assegnamento come <code>SOGLIA = 200;</code> non è consentito.</p>
+
+<h3>Perché usare un nome invece di ripetere il numero?</h3>
+<p>Se un valore compare molte volte nel codice, assegnargli un nome:</p>
+<ul>
+<li>rende più chiaro il suo significato;</li>
+<li>evita ripetizioni incoerenti;</li>
+<li>permette di modificarlo in un unico punto.</li>
+</ul>
+<p>L'esempio della lezione è $\pi$: se si decide di cambiarne l'approssimazione, si modifica la dichiarazione invece di cercare ogni occorrenza numerica nel programma.</p>
+
+<h2>9. Output con <code>printf</code></h2>
+<p><code>printf</code> è una funzione di libreria per scrivere sullo standard output, normalmente lo schermo.</p>
+
+<h3>Stampa di testo</h3>
+<pre><code>printf("Ciao!\n");</code></pre>
+<p>La stringa è delimitata dalle virgolette doppie; <code>\n</code> provoca un salto alla riga successiva.</p>
+
+<h3>Stampa di valori</h3>
+<pre><code>int eta = 19;
+printf("Hai %d anni.\n", eta);</code></pre>
+<p><code>%d</code> è uno <strong>specificatore di formato</strong>: viene sostituito dalla rappresentazione del valore passato dopo la stringa.</p>
+
+<h3>Formati principali</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Formato</th><th>Cosa si stampa</th></tr></thead>
+<tbody>
+<tr><td><code>%d</code></td><td>Intero decimale</td></tr>
+<tr><td><code>%f</code></td><td>Numero in virgola mobile in notazione decimale</td></tr>
+<tr><td><code>%e</code></td><td>Numero in notazione scientifica</td></tr>
+<tr><td><code>%c</code></td><td>Carattere</td></tr>
+<tr><td><code>%s</code></td><td>Stringa</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>L'associazione è posizionale</h3>
+<pre><code>printf("Numero: %d; carattere: %c\n", numero, carattere);</code></pre>
+<p>Il primo formato corrisponde al primo argomento dopo la stringa, il secondo al secondo. Gli argomenti possono anche essere espressioni:</p>
+<pre><code>printf("La somma e': %d\n", a + b);</code></pre>
+<p>Non è obbligatorio creare una variabile <code>somma</code> solo per stampare il risultato.</p>
+
+<h3>Carattere e codice numerico</h3>
+<p>Nel contesto ASCII della lezione:</p>
+<pre><code>char c = 'A';
+printf("%c\n", c);   /* Stampa A */
+printf("%d\n", c);   /* Stampa 65 */</code></pre>
+<p>Lo stesso valore viene visualizzato come carattere oppure come numero.</p>
+
+<h2>10. Input con <code>scanf</code></h2>
+<p><code>scanf</code> legge dati dallo standard input, normalmente la tastiera, e li memorizza nelle destinazioni indicate.</p>
+<pre><code>int numero;
+printf("Inserisci un numero: ");
+scanf("%d", &amp;numero);</code></pre>
+
+<h3>Che cosa significa <code>&amp;numero</code>?</h3>
+<p><code>&amp;numero</code> significa &laquo;<strong>indirizzo</strong> della variabile <code>numero</code>&raquo;. La distinzione è:</p>
+<pre><code>printf("%d", numero);    /* Uso il valore */
+scanf("%d", &amp;numero);    /* Indico dove scrivere il valore letto */</code></pre>
+<p><code>scanf</code> deve poter modificare la variabile: per questo riceve il suo indirizzo.</p>
+
+<h3>Formati per la lettura</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Variabile</th><th>Lettura</th></tr></thead>
+<tbody>
+<tr><td><code>int numero;</code></td><td><code>scanf("%d", &amp;numero);</code></td></tr>
+<tr><td><code>float x;</code></td><td><code>scanf("%f", &amp;x);</code></td></tr>
+<tr><td><code>double y;</code></td><td><code>scanf("%lf", &amp;y);</code></td></tr>
+<tr><td><code>char c;</code></td><td><code>scanf("%c", &amp;c);</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Attenzione soprattutto alla differenza tra <code>%f</code> e <code>%lf</code> nell'input: la destinazione deve avere il tipo corretto.</p>
+
+<h3>Lettura di più valori</h3>
+<pre><code>char c;
+int i;
+float x;
+scanf(" %c%d%f", &amp;c, &amp;i, &amp;x);</code></pre>
+<p>Un ingresso possibile è <code>A 3 7.345</code>. I valori vengono assegnati nell'ordine a <code>c</code>, <code>i</code> e <code>x</code>. Una sola chiamata può leggere più valori; non significa però che tutti debbano essere digitati sulla stessa riga.</p>
+
+<div class="box warn">
+<div class="bt"><code>scanf</code> non stampa messaggi</div>
+<p>Questo non mostra nessuna richiesta all'utente:</p>
+<pre><code>scanf("Inserisci un numero: %d", &amp;numero);</code></pre>
+<p>La forma corretta è:</p>
+<pre><code>printf("Inserisci un numero: ");
+scanf("%d", &amp;numero);</code></pre>
+<p>Precisazione: la stringa di formato di <code>scanf</code> può contenere anche caratteri letterali, ma questi devono <em>corrispondere all'ingresso</em>; non vengono stampati. Per esempio, <code>"%d,%d"</code> può descrivere due interi separati da una virgola.</p>
+</div>
+
+<h3>Controllare se la lettura è riuscita</h3>
+<p><code>scanf</code> restituisce il numero di valori assegnati con successo. Per leggere un solo intero:</p>
+<pre><code>if (scanf("%d", &amp;numero) != 1)
+{
+  printf("Input non valido.\n");
+  return 1;
+}</code></pre>
+<p>Questo controllo evita di proseguire dando per acquisito un numero che magari non è stato letto. È una precisazione pratica rispetto agli esempi introduttivi, che assumono ingressi corretti.</p>
+
+<h2>11. Il buffer di input: perché <code>%c</code> sembra &laquo;saltare&raquo; una lettura?</h2>
+<p>Questo è uno dei punti più importanti della lezione. Consideriamo:</p>
+<pre><code>char primo, secondo;
+scanf("%c", &amp;primo);
+scanf("%c", &amp;secondo);</code></pre>
+<p>Se si digita <code>A</code> + Invio, nell'ingresso troviamo concettualmente <code>'A'</code> e <code>'\n'</code>. La prima <code>scanf</code> legge <code>'A'</code>. La seconda legge subito <code>'\n'</code>, che era rimasto nell'ingresso: non ha bisogno di attendere un altro carattere.</p>
+
+<h3>Soluzione quando vogliamo un carattere non bianco</h3>
+<pre><code>scanf(" %c", &amp;secondo);</code></pre>
+<p>Lo spazio prima di <code>%c</code> fa consumare gli eventuali caratteri bianchi iniziali (spazi, tabulazioni, a capo) prima di leggere il carattere richiesto.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Formato</th><th>Comportamento</th></tr></thead>
+<tbody>
+<tr><td><code>"%c"</code></td><td>Legge il prossimo carattere, anche se è uno spazio o un a capo</td></tr>
+<tr><td><code>" %c"</code></td><td>Salta i caratteri bianchi iniziali e legge il prossimo carattere non bianco</td></tr>
+</tbody>
+</table>
+</div>
+<div class="box warn">
+<div class="bt">Non è una &laquo;pulizia completa del buffer&raquo;</div>
+<p>Gli altri caratteri già presenti restano disponibili e possono essere letti subito.</p>
+</div>
+
+<h3>Perché con gli interi spesso non succede?</h3>
+<p>Formati come <code>%d</code> e <code>%f</code> saltano già i caratteri bianchi iniziali; <code>%c</code> non lo fa automaticamente. Quindi due letture consecutive:</p>
+<pre><code>scanf("%d", &amp;a);
+scanf("%d", &amp;b);</code></pre>
+<p>non hanno bisogno dello spazio aggiuntivo soltanto per gestire l'a capo tra due numeri. Se invece lo spazio o l'a capo è proprio il dato che vuoi leggere, devi mantenere <code>"%c"</code> senza spazio iniziale.</p>
+
+<h2>12. Operazioni sugli interi</h2>
+<div class="tbl">
+<table>
+<thead><tr><th>Operatore</th><th>Significato</th></tr></thead>
+<tbody>
+<tr><td><code>=</code></td><td>Assegnamento</td></tr>
+<tr><td><code>+</code>, <code>-</code>, <code>*</code></td><td>Somma, sottrazione, moltiplicazione</td></tr>
+<tr><td><code>/</code></td><td>Divisione</td></tr>
+<tr><td><code>%</code></td><td>Resto della divisione intera</td></tr>
+<tr><td><code>==</code>, <code>!=</code></td><td>Uguaglianza e diversità</td></tr>
+<tr><td><code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code></td><td>Confronti</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt"><code>=</code> e <code>==</code> non sono intercambiabili</div>
+<pre><code>numero = 5;     /* Assegna 5 */
+numero == 5     /* Verifica se il valore e' 5 */</code></pre>
+</div>
+
+<h3>Divisione intera</h3>
+<p>Se entrambi gli operandi sono interi, il risultato della divisione è intero, e la parte frazionaria viene scartata:</p>
+<pre><code>7 / 2    /* Risultato: 3 */
+7 % 2    /* Risultato: 1 */</code></pre>
+<div class="box ex">
+<div class="bt">Esempio &mdash; <code>float risultato = 7 / 2;</code></div>
+<pre><code>float risultato;
+risultato = 7 / 2;</code></pre>
+<p>Il risultato memorizzato è <code>3.0</code>, non <code>3.5</code>: la divisione viene calcolata prima, usando due interi. Il tipo della destinazione non cambia retroattivamente l'operazione. Per ottenere il risultato frazionario:</p>
+<pre><code>risultato = 7.0f / 2;</code></pre>
+</div>
+
+<h3>Perché dividere e poi moltiplicare può non restituire il numero iniziale?</h3>
+<p>Esempio della lezione: <code>int a = 7; int b = 3;</code>. L'espressione <code>(a / b) * b</code> vale <code>(7 / 3) * 3</code>, cioè <code>2 * 3</code>, cioè <code>6</code>. Quindi non coincide con <code>a</code>. Per questi interi positivi, l'identità torna quando $a$ è divisibile per $b$: il punto non è, in generale, che $a$ sia pari o dispari.</p>
+
+<h2>13. Numeri in virgola mobile e precisione</h2>
+<p><code>float</code> e <code>double</code> rappresentano un'<strong>approssimazione</strong> dei numeri reali, usando uno spazio finito. Non possono quindi garantire precisione infinita. Si possono scrivere valori in notazione decimale (<code>3.14</code>, <code>0.000076</code>) oppure scientifica: <code>7.6e-5</code> significa</p>
+$$7.6\times10^{-5}.$$
+<p>Cambiare notazione non rende il numero più preciso: cambia il modo in cui lo scriviamo o visualizziamo.</p>
+
+<h3>Due numeri stampati uguali possono essere diversi</h3>
+<pre><code>float x = 4.56147f;
+float y = 4.56148f;</code></pre>
+<p>I valori sono diversi, anche se una visualizzazione con poche cifre decimali potrebbe farli apparire uguali. Bisogna distinguere il valore memorizzato dal testo mostrato a schermo.</p>
+
+<h3>Confronto con tolleranza</h3>
+<p>Invece di chiedere un'uguaglianza esatta, il problema può richiedere che i valori siano abbastanza vicini:</p>
+$$|x-y|\le\varepsilon.$$
+<p>La lezione propone questa forma, per valori finiti e una tolleranza positiva:</p>
+<pre><code>if (x &lt;= y + 0.01 &amp;&amp; y &lt;= x + 0.01)
+{
+  printf("Simili\n");
+}</code></pre>
+<p>Le due condizioni limitano la differenza in entrambe le direzioni.</p>
+<div class="box warn">
+<div class="bt">Che cosa significa <code>0.01</code>?</div>
+<p>È una <strong>tolleranza assoluta</strong>: accettiamo una differenza non superiore a 0.01. Non significa automaticamente &laquo;1%&raquo;, né garantisce che le prime due cifre decimali siano identiche. Per esempio, <code>1.999</code> e <code>2.001</code> differiscono soltanto di 0.002, pur trovandosi ai due lati di un intero. La tolleranza va scelta in base al problema: non esiste un valore unico adatto a tutti gli esercizi.</p>
+</div>
+
+<h3>Funzioni matematiche</h3>
+<p>Le slide citano le funzioni <code>sqrt</code> (radice quadrata), <code>pow</code> (potenza), <code>exp</code> (esponenziale), <code>sin</code>, <code>cos</code>, <code>tan</code> (trigonometriche). Le versioni presentate lavorano su <code>double</code>; il relativo header è <code>math.h</code>. Il nome della funzione per la potenza è <code>pow</code>, non <code>power</code>.</p>
+
+<h2>14. Caratteri, codici e sequenze di escape</h2>
+<p>Un carattere si scrive tra apici singoli (<code>'A'</code>), una stringa tra virgolette doppie (<code>"A"</code>).</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Scrittura</th><th>Significato</th></tr></thead>
+<tbody>
+<tr><td><code>a</code></td><td>Identificatore</td></tr>
+<tr><td><code>'a'</code></td><td>Carattere</td></tr>
+<tr><td><code>"a"</code></td><td>Stringa</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Sequenze di escape</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Sequenza</th><th>Significato</th></tr></thead>
+<tbody>
+<tr><td><code>'\n'</code></td><td>A capo</td></tr>
+<tr><td><code>'\t'</code></td><td>Tabulazione</td></tr>
+<tr><td><code>'\b'</code></td><td>Backspace</td></tr>
+<tr><td><code>'\r'</code></td><td>Ritorno carrello</td></tr>
+<tr><td><code>'\0'</code></td><td>Carattere nullo, terminatore delle stringhe C</td></tr>
+</tbody>
+</table>
+</div>
+<p>Anche se <code>\n</code> è scritto con due simboli nel codice sorgente, rappresenta un <strong>singolo carattere</strong>.</p>
+
+<h3>Riconoscere lettere e cifre nel contesto ASCII</h3>
+<p>Non serve confrontare il carattere con tutte le 26 lettere. Si sfrutta l'ordinamento dei codici ASCII:</p>
+<pre><code>/* Maiuscola */
+if (c &gt;= 'A' &amp;&amp; c &lt;= 'Z')
+{
+  printf("Lettera maiuscola\n");
+}
+
+/* Minuscola */
+if (c &gt;= 'a' &amp;&amp; c &lt;= 'z')
+{
+  printf("Lettera minuscola\n");
+}
+
+/* Cifra */
+if (c &gt;= '0' &amp;&amp; c &lt;= '9')
+{
+  printf("Cifra\n");
+}</code></pre>
+<p>Per le cifre, il confronto va fatto con <code>'0'</code> e <code>'9'</code>, non con gli interi 0 e 9.</p>
+
+<h3>Conversione da minuscola a maiuscola</h3>
+<pre><code>maiuscola = c - ('a' - 'A');</code></pre>
+<p>La distanza tra una lettera minuscola e la corrispondente maiuscola è costante e vale 32. Usare <code>'a' - 'A'</code> esprime il significato dell'operazione meglio di un numero isolato. La conversione va effettuata dopo aver verificato che <code>c</code> sia una minuscola:</p>
+<pre><code>if (c &gt;= 'a' &amp;&amp; c &lt;= 'z')
+{
+  maiuscola = c - ('a' - 'A');
+}</code></pre>
+<p>Sommare caratteri significa fare aritmetica sui loro codici: non significa concatenarli in una parola.</p>
+
+<h2>15. Esempio completo: somma fino allo zero</h2>
+<p>Il problema è leggere numeri interi e sommarli finché viene inserito 0, che funge da <strong>sentinella</strong>, cioè da valore di terminazione. Questa versione aggiunge il controllo dell'input agli esempi della lezione:</p>
+<pre><code>#include &lt;stdio.h&gt;
+
+int main(void)
+{
+  int numero, somma;
+
+  somma = 0;
+  printf("Inserisci un numero, 0 per terminare: ");
+  if (scanf("%d", &amp;numero) != 1)
+  {
+    printf("Input non valido.\n");
+    return 1;
+  }
+
+  while (numero != 0)
+  {
+    somma = somma + numero;
+    printf("Inserisci un numero, 0 per terminare: ");
+    if (scanf("%d", &amp;numero) != 1)
+    {
+      printf("Input non valido.\n");
+      return 1;
+    }
+  }
+
+  printf("La somma e': %d\n", somma);
+  return 0;
+}</code></pre>
+<p>La lettura iniziale permette di controllare subito la condizione del <code>while</code>. La lettura dentro il ciclo acquisisce il dato dell'iterazione successiva. Se il primo numero è 0, il corpo del ciclo non viene eseguito e la somma resta zero.</p>
+
+<h2>16. <code>typedef</code>: dare un nome a un tipo</h2>
+<p>La sintassi di base è:</p>
+<pre><code>typedef tipoEsistente nuovoNome;</code></pre>
+<div class="box ex">
+<div class="bt">Esempio &mdash; alias di <code>int</code></div>
+<pre><code>typedef int anno;
+anno annoNascita;
+anno annoCorrente;</code></pre>
+<p><code>anno</code> è un alias di <code>int</code>: permette di esprimere meglio il significato delle variabili, ma non introduce automaticamente nuovi vincoli.</p>
+</div>
+<p>Quindi <code>anno x = -10;</code> non viene vietato soltanto perché abbiamo chiamato il tipo <code>anno</code>. Se il problema richiede anni positivi o un intervallo particolare, bisogna verificarlo nel programma.</p>
+<p><strong>Che cosa non fa <code>typedef</code>?</strong> Non definisce automaticamente nuove operazioni, né costruisce da solo un nuovo tipo astratto completo. Le slide sottolineano proprio questa limitazione.</p>
+
+<h2>17. Enumerazioni: <code>enum</code></h2>
+<p>Un'enumerazione permette di definire costanti simboliche legate a valori interi.</p>
+<pre><code>typedef enum
+{
+  lun,
+  mar,
+  mer,
+  gio,
+  ven,
+  sab,
+  dom
+} giornoDellaSettimana;
+
+giornoDellaSettimana oggi;
+oggi = mer;</code></pre>
+<p><code>mer</code> non è una stringa: è una costante dell'enumerazione, quindi si usa senza virgolette.</p>
+
+<h3>Valori assegnati automaticamente</h3>
+<p>Non essendo specificati valori espliciti: <code>lun = 0</code>, <code>mar = 1</code>, <code>mer = 2</code>, <code>gio = 3</code>, <code>ven = 4</code>, <code>sab = 5</code>, <code>dom = 6</code>. Perciò <code>lun &lt; ven</code> è vero in base ai valori numerici associati. L'ordine dell'enumerazione non implica automaticamente un significato universale: se definiamo colori, il confronto dipende dall'ordine in cui li abbiamo elencati.</p>
+
+<h3>Booleani nell'impostazione del corso</h3>
+<pre><code>typedef enum
+{
+  falso,
+  vero
+} boolean;</code></pre>
+<p>In questo modo <code>falso = 0</code> e <code>vero = 1</code>. L'ordine è importante perché nelle condizioni C:</p>
+<ul>
+<li>zero significa falso;</li>
+<li>qualsiasi valore diverso da zero significa vero, anche se negativo.</li>
+</ul>
+<div class="box warn">
+<div class="bt">L'ordine dei nomi conta</div>
+<pre><code>typedef enum{
+  vero,
+  falso
+} boolean;</code></pre>
+<p>Qui <code>vero</code> avrebbe valore 0, cioè sarebbe falso nelle condizioni: il nome scelto non cambia il significato numerico.</p>
+</div>
+
+<h2>18. Array monodimensionali</h2>
+<p>Un array è una sequenza di elementi dello <strong>stesso tipo</strong>, accessibili tramite un indice.</p>
+<pre><code>int numeri[5];</code></pre>
+<p>Dichiara cinque elementi:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Indice</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th></tr></thead>
+<tbody>
+<tr><td>Elemento</td><td>[ ]</td><td>[ ]</td><td>[ ]</td><td>[ ]</td><td>[ ]</td></tr>
+</tbody>
+</table>
+</div>
+<p>Gli indici validi vanno da $0$ a $N-1$, non da $1$ a $N$.</p>
+
+<h3>Accesso agli elementi</h3>
+<pre><code>numeri[0] = 10;
+numeri[1] = 20;
+printf("%d\n", numeri[0]);
+scanf("%d", &amp;numeri[2]);</code></pre>
+<p>Un singolo elemento si usa come una variabile del tipo contenuto nell'array.</p>
+
+<h3>Dimensione e quantità di dati usati sono diverse</h3>
+<p>Supponiamo <code>int numeri[100];</code> ma di aver inserito soltanto sette numeri.</p>
+<ul>
+<li>Capacità: 100 elementi.</li>
+<li>Elementi effettivamente usati: 7.</li>
+<li>Ultimo indice occupato: 6.</li>
+</ul>
+<p>Serve quindi una variabile che tenga conto della quantità di dati memorizzati. Per stampare al contrario si parte dall'ultimo elemento occupato, non necessariamente dall'ultima posizione disponibile.</p>
+<div class="box warn">
+<div class="bt">Dimensione fissa non significa che devi riempirlo tutto</div>
+<p>L'array non cresce automaticamente quando serve altro spazio. Se è stato creato con 100 elementi, puoi usarne meno, ma non puoi trattarlo come se ne avesse 101. Il compromesso illustrato a lezione è scegliere una capacità sufficiente, sapendo che una parte potrebbe restare inutilizzata.</p>
+</div>
+
+<h3>Array e <code>typedef</code></h3>
+<pre><code>typedef int vettore[20];
+vettore lista1, lista2;</code></pre>
+<p>Definisce un nome riutilizzabile per il tipo &laquo;array di 20 interi&raquo;. Per queste due variabili si può anche scrivere direttamente <code>int lista1[20], lista2[20];</code>. Il vantaggio dell'alias aumenta quando il tipo deve essere riutilizzato o quando il suo nome chiarisce il significato dei dati.</p>
+
+<h2>19. Array multidimensionali</h2>
+<p>Un array bidimensionale si può leggere come una matrice:</p>
+<pre><code>int matrice[3][4];</code></pre>
+<p>Ha 3 righe, 4 colonne e 12 elementi. Per accedere a un elemento servono due indici:</p>
+<pre><code>matrice[1][2] = 7;</code></pre>
+<p>Gli indici ammessi sono da 0 a 2 per la prima dimensione e da 0 a 3 per la seconda. Una matrice non deve necessariamente essere quadrata.</p>
+
+<h3>Tre dimensioni</h3>
+<pre><code>int dati[10][20][30];
+dati[2][8][15] = 42;</code></pre>
+<p>Servono tre indici perché l'array ha tre dimensioni. In generale, ogni dimensione aggiunge un indice per identificare il singolo elemento.</p>
+
+<h2>20. Stringhe: il collegamento con gli array</h2>
+<p>Nel C non esiste un tipo fondamentale <code>string</code> come in altri linguaggi. Le stringhe C vengono rappresentate mediante sequenze di caratteri terminate da <code>'\0'</code>.</p>
+<pre><code>char nome[5] = "Luca";</code></pre>
+<p>La disposizione è <code>'L'</code> <code>'u'</code> <code>'c'</code> <code>'a'</code> <code>'\0'</code>. Per contenere una stringa di quattro caratteri servono dunque <strong>cinque</strong> posizioni, includendo il terminatore.</p>
+<p>Questo non significa che ogni array di caratteri sia automaticamente una stringa: il terminatore deve essere presente se vogliamo usarlo come stringa C.</p>
+
+<h2>21. <code>#define</code>: evitare numeri ripetuti nel codice</h2>
+<pre><code>#define LUNGHEZZA 100</code></pre>
+<p>definisce una macro. Il preprocessore sostituisce le occorrenze appropriate di <code>LUNGHEZZA</code> con <code>100</code> prima della compilazione. Possiamo quindi scrivere:</p>
+<pre><code>int numeri[LUNGHEZZA];
+...
+while (i &lt; LUNGHEZZA)</code></pre>
+<p>Per cambiare la capacità, modifichiamo soltanto <code>#define LUNGHEZZA 200</code> e ricompiliamo. Questo evita di aggiornare a mano tanti numeri sparsi, rischiando di dimenticarne qualcuno.</p>
+<div class="box warn">
+<div class="bt">Non mettere <code>=</code> o <code>;</code></div>
+<p>Forma corretta: <code>#define LUNGHEZZA 100</code>. Non: <code>#define LUNGHEZZA = 100;</code>. La macro è una sostituzione effettuata dal preprocessore, non una dichiarazione di variabile.</p>
+</div>
+
+<h3>Differenza rispetto a <code>const</code></h3>
+<div class="tbl">
+<table>
+<thead><tr><th><code>#define</code></th><th><code>const</code></th></tr></thead>
+<tbody>
+<tr><td>Definisce una macro</td><td>Dichiara un oggetto con un tipo</td></tr>
+<tr><td>Opera mediante sostituzione prima della compilazione</td><td>Fa parte del codice C analizzato dal compilatore</td></tr>
+<tr><td>Nell'esempio fornisce una dimensione costante per l'array</td><td>Un normale <code>const int</code> non è automaticamente un'espressione costante intera del C</td></tr>
+</tbody>
+</table>
+</div>
+<p>Per gli array a dimensione nota dell'impostazione del corso, <code>#define</code> è quindi una scelta coerente. È anche meglio non ridurre la distinzione a &laquo;<code>const</code> occupa sempre memoria fisica&raquo;: la differenza centrale riguarda il modello del linguaggio, non una garanzia su come verrà ottimizzato l'eseguibile.</p>
+
+<h2>22. Esempio completo: lettura e stampa inversa di un array</h2>
+<p>Questo esempio riprende il programma delle slide con capacità definita tramite macro e aggiunge il controllo delle letture.</p>
+<pre><code>#include &lt;stdio.h&gt;
+
+#define LUNGHEZZA 5
+
+int main(void)
+{
+  int numeri[LUNGHEZZA];
+  int i;
+
+  i = 0;
+  while (i &lt; LUNGHEZZA)
+  {
+    printf("Inserisci il numero %d: ", i + 1);
+    if (scanf("%d", &amp;numeri[i]) != 1)
+    {
+      printf("Input non valido.\n");
+      return 1;
+    }
+    i = i + 1;
+  }
+
+  i = i - 1;
+  printf("Numeri in ordine inverso:\n");
+  while (i &gt;= 0)
+  {
+    printf("%d\n", numeri[i]);
+    i = i - 1;
+  }
+
+  return 0;
+}</code></pre>
+
+<h3>Perché <code>i = i - 1</code> tra i due cicli?</h3>
+<p>Dopo la lettura di cinque numeri, <code>i</code> vale 5. Ma gli elementi validi sono <code>numeri[0]</code>, <code>numeri[1]</code>, <code>numeri[2]</code>, <code>numeri[3]</code>, <code>numeri[4]</code>. Prima della stampa dobbiamo quindi portare l'indice da 5 a 4, l'ultimo elemento. Il ciclo termina dopo aver stampato anche l'elemento in posizione 0.</p>
+
+<h2>23. Checklist per il ripasso</h2>
+<div class="box warn">
+<div class="bt">Cose da saper spiegare e applicare</div>
+<ul>
+<li>Progettare la soluzione prima di scrivere codice.</li>
+<li>Distinguere compilazione riuscita e correttezza dell'algoritmo.</li>
+<li>Dichiarare una variabile prima di usarla.</li>
+<li>Distinguere dichiarazione, inizializzazione e assegnamento.</li>
+<li>Distinguere <code>=</code> da <code>==</code>.</li>
+<li>Usare i formati corretti in <code>printf</code> e <code>scanf</code>.</li>
+<li>Passare a <code>scanf</code> l'indirizzo della destinazione.</li>
+<li>Capire perché <code>"%c"</code> legge anche un a capo.</li>
+<li>Usare <code>" %c"</code> quando si vogliono saltare i caratteri bianchi.</li>
+<li>Ricordare che la divisione tra interi produce un risultato intero.</li>
+<li>Distinguere uguaglianza esatta e confronto con tolleranza.</li>
+<li>Distinguere caratteri, stringhe e identificatori.</li>
+<li>Usare i confronti sugli intervalli ASCII invece di 26 confronti separati.</li>
+<li>Capire che <code>typedef</code> dà un alias, senza aggiungere automaticamente vincoli.</li>
+<li>Capire che i nomi di un'enumerazione hanno valori numerici.</li>
+<li>Gestire gli indici degli array da 0 a $N-1$.</li>
+<li>Distinguere capacità dell'array e numero di elementi utilizzati.</li>
+<li>Usare <code>#define</code> per tenere coerenti dimensioni e limiti dei cicli.</li>
+</ul>
+</div>
+
+<h3>Mini-autoverifica</h3>
+<p>Prova a rispondere senza guardare gli appunti:</p>
+<ol>
+<li>Perché <code>float x = 7 / 2;</code> memorizza 3.0?</li>
+<li>Che differenza c'è tra <code>scanf("%c", &amp;c)</code> e <code>scanf(" %c", &amp;c)</code>?</li>
+<li>Perché <code>printf</code> usa <code>numero</code>, mentre <code>scanf</code> usa <code>&amp;numero</code>?</li>
+<li>Qual è l'ultimo indice valido di <code>int dati[20]</code>?</li>
+<li>Perché <code>typedef int anno;</code> non impedisce di assegnare <code>-10</code>?</li>
+<li>Perché una tolleranza <code>0.01</code> non significa automaticamente &laquo;1%&raquo;?</li>
+<li>Se un array ha capacità 100 ma contiene sette dati, da quale indice inizi a stamparli al contrario?</li>
+</ol>
+</document_content>
