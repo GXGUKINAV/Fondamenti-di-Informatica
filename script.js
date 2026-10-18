@@ -64,6 +64,12 @@ var esercitazioni = [
     title: 'Conversioni, IEEE 754 e programmi in assembler',
     file: 'appunti/esercitazione-2.html',
     date: '2026-10-08' /* date: 'aaaa-mm-gg'  (facoltativa) */
+  },
+  {
+    n: 4,
+    title: 'Progettazione degli algoritmi, sintassi C e tipi di dato',
+    file: 'appunti/day-04.html',
+    date: '2026-10-15' /* date: 'aaaa-mm-gg'  (facoltativa) */
   }
 ];
 esercitazioni.sort(function (a, b) { return a.n - b.n; });

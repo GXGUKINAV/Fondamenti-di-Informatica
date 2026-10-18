@@ -1,0 +1,690 @@
+<h2>1. Introduzione</h2>
+<p>Questa esercitazione collega due livelli di programmazione: la <strong>macchina didattica di von Neumann</strong>, in cui bisogna gestire accumulatore, celle e salti, e il <strong>linguaggio C</strong>, in cui gli stessi algoritmi si esprimono con variabili, espressioni, selezioni e cicli. Il ragionamento resta lo stesso: individuare i dati necessari, stabilire le operazioni e controllare in quale ordine vengono eseguite. Cambiano gli strumenti con cui lo descriviamo.</p>
+
+<h2>2. Von Neumann: somma dei due massimi di una sequenza</h2>
+<div class="box ex">
+<div class="bt">Richiesta</div>
+<p>Leggere una sequenza di interi positivi terminata da 0 e stampare:</p>
+<ul>
+<li>la somma dei due numeri più grandi, se sono stati letti almeno due numeri;</li>
+<li>l'unico numero letto, se ne è stato letto uno;</li>
+<li>0, se la sequenza è vuota.</li>
+</ul>
+<p>Lo 0 è il terminatore: segnala la fine dell'input e non appartiene ai dati da elaborare.</p>
+</div>
+<div class="tbl">
+<table>
+<thead><tr><th>Input</th><th>Output</th></tr></thead>
+<tbody>
+<tr><td><code>5 7 3 9 0</code></td><td>16</td></tr>
+<tr><td><code>7 0</code></td><td>7</td></tr>
+<tr><td><code>0</code></td><td>0</td></tr>
+<tr><td><code>9 9 5 0</code></td><td>18</td></tr>
+</tbody>
+</table>
+</div>
+<p>L'ultimo esempio chiarisce che si cercano le due <strong>occorrenze</strong> più grandi, non necessariamente due valori distinti: due 9 possono occupare entrambi i posti.</p>
+
+<h3>Celle necessarie</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Cella</th><th>Nome logico</th><th>Contenuto</th></tr></thead>
+<tbody>
+<tr><td>100</td><td><code>n</code></td><td>numero corrente</td></tr>
+<tr><td>101</td><td><code>max1</code></td><td>massimo corrente</td></tr>
+<tr><td>102</td><td><code>max2</code></td><td>secondo massimo corrente</td></tr>
+</tbody>
+</table>
+</div>
+<p>Salvare <code>n</code> serve perché le sottrazioni usate nei confronti modificano l'accumulatore: dopo un confronto potremmo avere ancora bisogno del numero originale.</p>
+
+<h3>Perché inizializzare entrambi i massimi a zero?</h3>
+<p>I dati validi sono tutti positivi e il risultato finale è sempre <code>max1 + max2</code>. Partire da zero gestisce automaticamente tutti i casi:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Numeri letti</th><th>Stato finale</th><th>Somma</th></tr></thead>
+<tbody>
+<tr><td>Nessuno</td><td><code>max1 = 0</code>, <code>max2 = 0</code></td><td>0</td></tr>
+<tr><td>Solo 7</td><td><code>max1 = 7</code>, <code>max2 = 0</code></td><td>7</td></tr>
+<tr><td>Almeno due</td><td>i due massimi</td><td>somma richiesta</td></tr>
+</tbody>
+</table>
+</div>
+<p>Non serve quindi un contatore per distinguere i tre casi.</p>
+<div class="box warn">
+<div class="bt">Un massimo non va sempre inizializzato a zero</div>
+<p>Con una sequenza come <code>-7 -5 -2 -1</code>, partendo da zero e aggiornando solo quando arriva un valore maggiore, si otterrebbe erroneamente 0. Quando il dominio dei dati non offre un valore iniziale adatto, una strategia generale è inizializzare il massimo con il <strong>primo dato valido letto</strong>, gestendo separatamente l'eventuale sequenza vuota.</p>
+</div>
+
+<h3>Aggiornamento dei due massimi</h3>
+<p>Per ogni <code>n</code> valido ci sono tre possibilità.</p>
+<p><strong>Caso A: <code>n &gt; max1</code>.</strong> Il nuovo numero è il massimo e il vecchio massimo diventa il secondo:</p>
+<pre><code>max2 = max1;
+max1 = n;</code></pre>
+<div class="box warn">
+<div class="bt">L'ordine degli assegnamenti è fondamentale</div>
+<p>Questo codice è sbagliato:</p>
+<pre><code>max1 = n;
+max2 = max1;</code></pre>
+<p>Dopo la prima istruzione il vecchio <code>max1</code> è perso e la seconda copia di nuovo <code>n</code>. Con <code>max1 = 7</code>, <code>max2 = 5</code>, <code>n = 9</code>: la versione corretta dà <code>max1 = 9</code>, <code>max2 = 7</code>; quella errata dà <code>max1 = 9</code>, <code>max2 = 9</code>. Non serve una variabile temporanea: basta ordinare correttamente gli assegnamenti.</p>
+</div>
+<p><strong>Caso B: <code>n &lt;= max1</code> ma <code>n &gt; max2</code>.</strong> Si aggiorna soltanto il secondo massimo: <code>max2 = n;</code></p>
+<p><strong>Caso C: <code>n &lt;= max2</code>.</strong> Non cambia nulla.</p>
+
+<h3>Confrontare due numeri in von Neumann</h3>
+<p>La macchina didattica non ha un'istruzione come <code>if (n &gt; max1)</code>, ma si usa l'equivalenza</p>
+$$n\gt \text{max1}\iff n-\text{max1}\gt0.$$
+<p>Dopo aver calcolato <code>n - max1</code> nell'accumulatore: se il risultato è positivo, <code>n</code> è maggiore; se è zero, i valori sono uguali; se è negativo, <code>n</code> è minore. I salti condizionati scelgono il percorso in base al contenuto di ACC.</p>
+
+<h3>Programma</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Riga</th><th>Istruzione</th><th>Commento</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><code>LOAD =0</code></td><td></td></tr>
+<tr><td>1</td><td><code>STORE 101</code></td><td><code>max1 = 0</code></td></tr>
+<tr><td>2</td><td><code>STORE 102</code></td><td><code>max2 = 0</code> (ACC invariato)</td></tr>
+<tr><td>3</td><td><code>READ</code></td><td>legge <code>n</code></td></tr>
+<tr><td>4</td><td><code>BLE 19</code></td><td>terminatore: vai alla stampa</td></tr>
+<tr><td>5</td><td><code>STORE 100</code></td><td>salva <code>n</code></td></tr>
+<tr><td>6</td><td><code>SUB 101</code></td><td><code>n - max1</code></td></tr>
+<tr><td>7</td><td><code>BLE 13</code></td><td>se <code>n &lt;= max1</code>, confronta con <code>max2</code></td></tr>
+<tr><td>8</td><td><code>LOAD 101</code></td><td></td></tr>
+<tr><td>9</td><td><code>STORE 102</code></td><td><code>max2 = max1</code></td></tr>
+<tr><td>10</td><td><code>LOAD 100</code></td><td></td></tr>
+<tr><td>11</td><td><code>STORE 101</code></td><td><code>max1 = n</code></td></tr>
+<tr><td>12</td><td><code>BR 3</code></td><td>legge il successivo</td></tr>
+<tr><td>13</td><td><code>LOAD 100</code></td><td></td></tr>
+<tr><td>14</td><td><code>SUB 102</code></td><td><code>n - max2</code></td></tr>
+<tr><td>15</td><td><code>BLE 3</code></td><td>se <code>n &lt;= max2</code>, non cambia nulla</td></tr>
+<tr><td>16</td><td><code>LOAD 100</code></td><td></td></tr>
+<tr><td>17</td><td><code>STORE 102</code></td><td><code>max2 = n</code></td></tr>
+<tr><td>18</td><td><code>BR 3</code></td><td></td></tr>
+<tr><td>19</td><td><code>LOAD 101</code></td><td></td></tr>
+<tr><td>20</td><td><code>ADD 102</code></td><td><code>max1 + max2</code></td></tr>
+<tr><td>21</td><td><code>WRITE</code></td><td></td></tr>
+<tr><td>22</td><td><code>END</code></td><td></td></tr>
+</tbody>
+</table>
+</div>
+<p>Lettura per blocchi:</p>
+<ul>
+<li>righe 0&ndash;2: inizializzazione;</li>
+<li>righe 3&ndash;5: lettura, controllo del terminatore e salvataggio;</li>
+<li>righe 6&ndash;7: confronto con il primo massimo;</li>
+<li>righe 8&ndash;12: aggiornamento di entrambi i massimi;</li>
+<li>righe 13&ndash;15: confronto con il secondo massimo;</li>
+<li>righe 16&ndash;18: aggiornamento del secondo massimo;</li>
+<li>righe 19&ndash;22: somma, stampa e terminazione.</li>
+</ul>
+<p>Il <code>BLE</code> dopo la lettura tratta anche un eventuale numero negativo come fine sequenza: è coerente con l'esercizio solo perché il testo ammette come input validi i positivi e lo zero terminatore.</p>
+
+<h3>Lo stesso ragionamento in C</h3>
+<pre><code>#include &lt;stdio.h&gt;
+
+int main(void) {
+  int n;
+  int max1 = 0;
+  int max2 = 0;
+
+  scanf("%d", &amp;n);
+  while (n &gt; 0) {
+    if (n &gt; max1) {
+      max2 = max1;
+      max1 = n;
+    } else if (n &gt; max2) {
+      max2 = n;
+    }
+    scanf("%d", &amp;n);
+  }
+  printf("%d\n", max1 + max2);
+  return 0;
+}</code></pre>
+<p>Negli esempi introduttivi si suppone, salvo dove indicato, che l'utente inserisca dati del tipo richiesto e che i risultati rientrino nel tipo utilizzato.</p>
+
+<h2>3. Struttura di un programma C</h2>
+<pre><code>#include &lt;stdio.h&gt;
+#define DIM 5
+
+int main(void) {
+  /* Dichiarazione delle variabili */
+  /* Lettura ed elaborazione dei dati */
+  /* Stampa del risultato */
+  return 0;
+}</code></pre>
+<p>Le parti principali sono: direttive di preprocessore, definizione della funzione principale, dichiarazioni, istruzioni eseguibili.</p>
+
+<h3>Direttive di preprocessore</h3>
+<p>Le direttive iniziano con <code>#</code>.</p>
+<ul>
+<li><code>#include &lt;stdio.h&gt;</code> include l'header con le dichiarazioni di <code>printf</code> e <code>scanf</code>. Più precisamente non stiamo &laquo;scrivendo una funzione di input/output&raquo;: rendiamo disponibili le dichiarazioni per usare funzioni di libreria.</li>
+<li><code>#define DIM 5</code> definisce una <strong>macro</strong>: il preprocessore sostituisce gli utilizzi di <code>DIM</code> con <code>5</code>. Non è una variabile e non va aggiunto il punto e virgola. I nomi maiuscoli sono una convenzione.</li>
+</ul>
+
+<h3>La funzione <code>main</code></h3>
+<p>Negli appunti si usa <code>int main(void)</code>:</p>
+<ul>
+<li><code>int</code>: tipo del valore restituito;</li>
+<li><code>main</code>: nome della funzione di ingresso del programma;</li>
+<li><code>void</code> tra parentesi: nessun parametro;</li>
+<li><code>{ ... }</code>: corpo della funzione.</li>
+</ul>
+<div class="box warn">
+<div class="bt"><code>int main(void)</code>, non <code>void main()</code></div>
+<p>La forma <code>void main()</code> mostrata a lezione e in alcune slide non è quella da prendere come riferimento per programmi portabili. Alla fine, <code>return 0;</code> segnala una terminazione riuscita. Per indicare un fallimento in modo portabile si può usare <code>EXIT_FAILURE</code> (definito in <code>stdlib.h</code>): <code>-1</code> non è un codice d'errore universale imposto dal linguaggio. Dal C99, raggiungere la fine di <code>main</code> equivale a restituire 0; scriverlo resta utile per chiarezza.</p>
+</div>
+
+<h3>Dichiarazione e inizializzazione</h3>
+<pre><code>int n;            /* dichiarazione, nessun valore iniziale */
+int somma = 0;    /* dichiarazione con inizializzazione */</code></pre>
+<p>Per le variabili locali automatiche non bisogna presumere che una dichiarazione senza inizializzazione produca zero: va assegnato un valore prima di usarle in un calcolo. Più variabili dello stesso tipo si dichiarano insieme (<code>float a, b, somma;</code>). Dichiararle tutte all'inizio della funzione è lo stile della lezione, non un obbligo del C moderno.</p>
+
+<h2>4. Input e output: <code>scanf</code> e <code>printf</code></h2>
+<div class="tbl">
+<table>
+<thead><tr><th>Tipo</th><th>Lettura con <code>scanf</code></th><th>Stampa con <code>printf</code></th></tr></thead>
+<tbody>
+<tr><td><code>int</code></td><td><code>%d</code></td><td><code>%d</code></td></tr>
+<tr><td><code>float</code></td><td><code>%f</code></td><td><code>%f</code></td></tr>
+<tr><td><code>char</code></td><td><code>%c</code></td><td><code>%c</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>La stringa di formato e gli argomenti devono corrispondere per <strong>tipo e ordine</strong>.</p>
+<pre><code>int quantita;
+float prezzo;
+scanf("%d %f", &amp;quantita, &amp;prezzo);
+printf("Quantita: %d; prezzo: %f\n", quantita, prezzo);</code></pre>
+
+<h3>Perché <code>scanf</code> usa <code>&amp;</code>?</h3>
+<p><code>&amp;n</code> significa &laquo;indirizzo della variabile <code>n</code>&raquo;. <code>scanf</code> deve sapere <em>dove</em> scrivere il valore letto; <code>printf</code>, invece, riceve il <em>valore</em> da stampare. È un primo collegamento con il tema dei puntatori.</p>
+
+<h3>Letture multiple</h3>
+<p><code>scanf("%f %f", &amp;a, &amp;b);</code> legge due valori e li assegna, nell'ordine, ad <code>a</code> e <code>b</code>: per questi input numerici equivale a due <code>scanf</code> separate.</p>
+<div class="box warn">
+<div class="bt">Formato e tipo devono coincidere</div>
+<pre><code>int n;
+scanf("%f", &amp;n);   /* Sbagliato */</code></pre>
+<p><code>%f</code> richiede un puntatore a <code>float</code>, non a <code>int</code>: l'incompatibilità può causare comportamento indefinito. Non è una semplice &laquo;conversione che taglia la parte decimale&raquo;.</p>
+</div>
+
+<h3>Caratteri speciali</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Sequenza</th><th>Significato</th></tr></thead>
+<tbody>
+<tr><td><code>\n</code></td><td>a capo</td></tr>
+<tr><td><code>\t</code></td><td>tabulazione orizzontale</td></tr>
+<tr><td><code>\\</code></td><td>carattere backslash</td></tr>
+<tr><td><code>\"</code></td><td>virgolette doppie nella stringa</td></tr>
+</tbody>
+</table>
+</div>
+<p>La sequenza corretta per andare a capo è <code>\n</code> (backslash), non <code>/n</code>.</p>
+
+<h2>5. Somma di due <code>float</code> con quattro cifre decimali</h2>
+<div class="box ex">
+<div class="bt">Richiesta</div>
+<p>Leggere due <code>float</code>, calcolarne la somma e stamparla con esattamente quattro cifre dopo il separatore decimale.</p>
+</div>
+<pre><code>#include &lt;stdio.h&gt;
+
+int main(void) {
+  float a, b, somma;
+
+  printf("Inserisci due numeri:\n");
+  scanf("%f %f", &amp;a, &amp;b);
+  somma = a + b;
+  printf("La somma e': %.4f\n", somma);
+  return 0;
+}</code></pre>
+<p>Il punto chiave è <code>%.4f</code>: la precisione <code>.4</code> richiede quattro cifre decimali; se servono, vengono aggiunti zeri finali.</p>
+<div class="box warn">
+<div class="bt">Formattare non significa troncare</div>
+<p>La rappresentazione viene <strong>arrotondata</strong> alla precisione richiesta: <code>printf("%.4f\n", 3.141592);</code> stampa <code>3.1416</code>. La formattazione modifica ciò che viene stampato, non il valore memorizzato nella variabile.</p>
+</div>
+<p>La variabile <code>somma</code> non è necessaria: negli argomenti di <code>printf</code> si possono usare espressioni, quindi basta <code>printf("La somma e': %.4f\n", a + b);</code>. Mantenerla può rendere più evidente il passaggio del calcolo.</p>
+
+<h2>6. Somma o prodotto in base alla parità</h2>
+<div class="box ex">
+<div class="bt">Richiesta</div>
+<p>Leggere tre interi <code>a</code>, <code>b</code>, <code>c</code>. Se <code>c</code> è dispari stampare <code>a + b</code>; se <code>c</code> è pari stampare <code>a * b</code>.</p>
+</div>
+<p>L'operatore <code>%</code> calcola il resto della divisione intera. Per riconoscere un numero dispari si usa <code>c % 2 != 0</code>: verifica direttamente che il numero non sia divisibile per due, senza richiedere che il resto sia proprio 1.</p>
+<pre><code>#include &lt;stdio.h&gt;
+
+int main(void) {
+  int a, b, c, risultato;
+
+  printf("Inserisci tre numeri interi:\n");
+  scanf("%d %d %d", &amp;a, &amp;b, &amp;c);
+
+  if (c % 2 != 0) {
+    risultato = a + b;
+  } else {
+    risultato = a * b;
+  }
+
+  printf("Il risultato e': %d\n", risultato);
+  return 0;
+}</code></pre>
+
+<h3>Quando servono le graffe?</h3>
+<p>Senza graffe, <code>if</code> ed <code>else</code> controllano una sola istruzione. Se il ramo deve contenerne di più, serve un blocco:</p>
+<pre><code>if (c % 2 != 0) {
+  printf("Hai selezionato la somma.\n");
+  risultato = a + b;
+}</code></pre>
+<p>L'indentazione aiuta il lettore ma non crea un blocco: lo fanno le graffe. Per evitare errori, negli appunti le graffe si mantengono anche nei rami semplici.</p>
+
+<h2>7. Somma di una sequenza terminata da zero</h2>
+<p>Servono due variabili: <code>int n;</code> (dato corrente, sovrascritto a ogni lettura) e <code>int somma = 0;</code> (accumulatore). Non serve memorizzare l'intera sequenza: basta il totale parziale.</p>
+<pre><code>#include &lt;stdio.h&gt;
+
+int main(void) {
+  int n;
+  int somma = 0;
+
+  printf("Inserisci numeri interi; 0 per terminare:\n");
+  scanf("%d", &amp;n);
+  while (n != 0) {
+    somma += n;
+    scanf("%d", &amp;n);
+  }
+  printf("La somma e': %d\n", somma);
+  return 0;
+}</code></pre>
+<p>Funzionamento: leggere un primo valore, verificare che sia diverso dal terminatore, elaborarlo, leggere il successivo, tornare al controllo. La lettura prima del ciclo è necessaria perché la prima valutazione della condizione deve usare un valore già assegnato a <code>n</code>.</p>
+
+<h3>Assegnamenti composti</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Forma estesa</th><th>Forma composta</th></tr></thead>
+<tbody>
+<tr><td><code>a = a + b;</code></td><td><code>a += b;</code></td></tr>
+<tr><td><code>a = a - b;</code></td><td><code>a -= b;</code></td></tr>
+<tr><td><code>a = a * b;</code></td><td><code>a *= b;</code></td></tr>
+<tr><td><code>a = a / b;</code></td><td><code>a /= b;</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Il concetto: applicare un'operazione al valore corrente della variabile e memorizzare il risultato nella stessa variabile.</p>
+
+<h3>Perché inizializzare la somma?</h3>
+<p><code>somma += n;</code> legge anche il <em>vecchio</em> valore di <code>somma</code>. Se non l'abbiamo impostato a zero, non partiamo dall'elemento neutro ma da una variabile senza valore iniziale assegnato dal programma. Invece <code>n</code> non deve necessariamente essere inizializzata alla dichiarazione: una lettura riuscita la valorizza prima dell'uso.</p>
+
+<h2>8. <code>while</code> e <code>do-while</code>: differenza e terminatore</h2>
+<div class="tbl">
+<table>
+<thead><tr><th>Ciclo</th><th>Controllo</th><th>Esecuzioni minime</th></tr></thead>
+<tbody>
+<tr><td><code>while (condizione) { ... }</code></td><td>prima del corpo</td><td>0</td></tr>
+<tr><td><code>do { ... } while (condizione);</code></td><td>dopo il corpo</td><td>1</td></tr>
+</tbody>
+</table>
+</div>
+<p>Nel <code>do-while</code> il punto e virgola finale è <strong>necessario</strong>.</p>
+
+<h3>Versione con <code>do-while</code></h3>
+<p>Per escludere esplicitamente il terminatore dall'elaborazione:</p>
+<pre><code>#include &lt;stdio.h&gt;
+
+int main(void) {
+  int n;
+  int somma = 0;
+
+  do {
+    scanf("%d", &amp;n);
+    if (n != 0) {
+      somma += n;
+    }
+  } while (n != 0);
+
+  printf("La somma e': %d\n", somma);
+  return 0;
+}</code></pre>
+<p>La lettura avviene sempre almeno una volta; la somma viene aggiornata solo se il numero letto è un dato valido.</p>
+
+<h3>La trappola dell'elemento neutro</h3>
+<p>Per <em>questo</em> esercizio funziona anche:</p>
+<pre><code>do {
+  scanf("%d", &amp;n);
+  somma += n;
+} while (n != 0);</code></pre>
+<p>Il terminatore viene sommato, ma aggiungere zero non cambia il risultato ($s+0=s$). La stessa struttura diventerebbe sbagliata, senza altri adattamenti, se il terminatore fosse 1 (si sommerebbe anche quell'1) oppure se si calcolasse un prodotto terminato da 0 (si moltiplicherebbe per zero).</p>
+<div class="box warn">
+<div class="bt">Regola da ricordare</div>
+<p>Un terminatore <strong>non è un dato da elaborare</strong>. Se il programma lo elabora comunque, deve esserci una ragione precisa per cui il risultato resta corretto.</p>
+</div>
+
+<h2>9. Dal codice von Neumann al C</h2>
+<p>Quando il codice di partenza è in von Neumann, conviene:</p>
+<ol>
+<li>annotare il significato di ogni istruzione;</li>
+<li>seguire come cambiano accumulatore e celle;</li>
+<li>raggruppare le istruzioni in operazioni più grandi;</li>
+<li>riconoscere selezioni e cicli;</li>
+<li>riscrivere il <em>comportamento</em>, senza tradurre meccanicamente ogni riga.</li>
+</ol>
+
+<h3>Primo blocco: calcolo del resto</h3>
+<p>Dopo aver letto <code>n</code>, viene eseguito un blocco solo se $n\gt10$. Il blocco calcola</p>
+$$n-\left\lfloor\frac{n}{10}\right\rfloor\cdot10,$$
+<p>con divisione intera: è il resto della divisione per dieci. In C tutto quel lavoro diventa <code>n = n % 10;</code>. La cella temporanea necessaria in von Neumann non deve diventare per forza una variabile aggiuntiva in C.</p>
+
+<h3>Secondo blocco: conto alla rovescia</h3>
+<p>Il blocco successivo controlla se il valore è zero; se non lo è, sottrae uno, stampa il valore aggiornato e ripete. Per il dominio non negativo assunto, il C ricostruito è:</p>
+<pre><code>#include &lt;stdio.h&gt;
+
+int main(void) {
+  int n;
+
+  scanf("%d", &amp;n);
+  if (n &gt; 10) {
+    n = n % 10;
+  }
+  while (n &gt; 0) {
+    n--;
+    printf("%d\n", n);
+  }
+  return 0;
+}</code></pre>
+<div class="tbl">
+<table>
+<thead><tr><th>Input</th><th>Dopo l'eventuale <code>%</code></th><th>Output</th></tr></thead>
+<tbody>
+<tr><td>7</td><td>7</td><td><code>6 5 4 3 2 1 0</code></td></tr>
+<tr><td>23</td><td>3</td><td><code>2 1 0</code></td></tr>
+<tr><td>20</td><td>0</td><td>nessun numero</td></tr>
+<tr><td>10</td><td>10</td><td><code>9 8 7 6 5 4 3 2 1 0</code></td></tr>
+</tbody>
+</table>
+</div>
+<div class="box warn">
+<div class="bt">Attenzione</div>
+<ul>
+<li>Il caso 10 merita attenzione: la condizione è <code>n &gt; 10</code>, non <code>n &gt;= 10</code>, quindi il resto non viene calcolato.</li>
+<li>Nella trascrizione ci sono incongruenze nella dettatura dei numeri di riga e dei salti di questo secondo listato: il codice sopra ricostruisce il comportamento spiegato dal docente, non riproduce un listato originale privo di ambiguità.</li>
+<li><code>n &gt; 0</code> e <code>n != 0</code> sono equivalenti soltanto nel dominio non negativo assunto: per input negativi descrivono cicli diversi.</li>
+</ul>
+</div>
+
+<h2>10. Preincremento, postincremento e decremento</h2>
+<p>Gli operatori <code>n++</code>, <code>++n</code>, <code>n--</code>, <code>--n</code> modificano tutti <code>n</code> di una unità. La differenza tra forma prefissa e postfissa riguarda il <strong>valore prodotto dall'espressione</strong>.</p>
+<pre><code>int n = 5;
+printf("%d\n", n++);   /* stampa 5 */
+printf("%d\n", n);     /* stampa 6 */</code></pre>
+<pre><code>int n = 5;
+printf("%d\n", ++n);   /* stampa 6 */
+printf("%d\n", n);     /* stampa 6 */</code></pre>
+<p>Con <code>n = 5</code> iniziale, considerando ogni riga separatamente:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Espressione</th><th>Valore prodotto</th><th>Valore successivo di <code>n</code></th></tr></thead>
+<tbody>
+<tr><td><code>n++</code></td><td>5</td><td>6</td></tr>
+<tr><td><code>++n</code></td><td>6</td><td>6</td></tr>
+<tr><td><code>n--</code></td><td>5</td><td>4</td></tr>
+<tr><td><code>--n</code></td><td>4</td><td>4</td></tr>
+</tbody>
+</table>
+</div>
+<p>Usati come istruzioni isolate, <code>n++;</code> e <code>++n;</code> hanno lo stesso effetto utile. La differenza conta quando si usa anche il valore dell'espressione.</p>
+
+<h2>11. Array monodimensionali</h2>
+<p>Un array è una sequenza di elementi dello <strong>stesso tipo</strong>, collocati consecutivamente in memoria e accessibili tramite un indice. <code>int a[5];</code> definisce cinque interi: <code>a[0]</code>, <code>a[1]</code>, <code>a[2]</code>, <code>a[3]</code>, <code>a[4]</code>. Per un array di dimensione <code>DIM</code>, gli indici validi vanno da 0 a <code>DIM - 1</code>.</p>
+<pre><code>#define DIM 5
+int a[DIM] = {3, 9, 7, 4, 8};</code></pre>
+<div class="tbl">
+<table>
+<thead><tr><th>Indice</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th></tr></thead>
+<tbody>
+<tr><td>Valore</td><td>3</td><td>9</td><td>7</td><td>4</td><td>8</td></tr>
+</tbody>
+</table>
+</div>
+<pre><code>printf("%d\n", a[1]);   /* stampa 9 */
+a[1] = 20;              /* modifica l'elemento */</code></pre>
+
+<h3>Inizializzazione parziale</h3>
+<div class="box warn">
+<div class="bt">Correzione rispetto alla spiegazione orale</div>
+<p>A lezione si è detto che l'inizializzazione degli elementi mancanti dipenderebbe dall'età del compilatore: è falso. Con <code>int a[5] = {3, 9, 7};</code> i due elementi rimanenti valgono zero (<code>3 9 7 0 0</code>). È una regola del linguaggio C.</p>
+</div>
+<ul>
+<li><code>int a[5];</code> dentro una funzione, senza inizializzatore: non si deve presumere che gli elementi valgano zero.</li>
+<li><code>int a[5] = {0};</code> inizializza tutti gli elementi a zero: il primo è esplicito, gli altri seguono la regola degli elementi mancanti.</li>
+<li><code>int a[3] = {1, 2, 3, 4};</code> non è valido: più inizializzatori degli elementi disponibili.</li>
+</ul>
+
+<h2>12. Somma degli elementi di indice dispari</h2>
+<p>Dato <code>int a[5] = {3, 9, 7, 4, 8};</code>, gli indici dispari sono 1 e 3, quindi si somma $a[1]+a[3]=9+4=13$.</p>
+<div class="box warn">
+<div class="bt">Indice o valore?</div>
+<p>Non si sommano i <em>valori</em> dispari dell'array (sarebbe un'altra richiesta). Il 4 va incluso perché si trova all'indice 3, anche se il suo valore è pari.</p>
+</div>
+
+<h3>Prima soluzione: scorrere tutti gli indici</h3>
+<pre><code>#include &lt;stdio.h&gt;
+#define DIM 5
+
+int main(void) {
+  int a[DIM] = {3, 9, 7, 4, 8};
+  int somma = 0;
+  int i;
+
+  for (i = 0; i &lt; DIM; i++) {
+    if (i % 2 != 0) {
+      somma += a[i];
+    }
+  }
+  printf("La somma e': %d\n", somma);
+  return 0;
+}</code></pre>
+
+<h3>Come funziona il <code>for</code></h3>
+<pre><code>for (inizializzazione; condizione; aggiornamento) {
+  corpo;
+}</code></pre>
+<p>Nell'esempio <code>for (i = 0; i &lt; DIM; i++)</code> l'ordine è:</p>
+<ol>
+<li>eseguire <code>i = 0</code> una sola volta;</li>
+<li>verificare <code>i &lt; DIM</code>;</li>
+<li>eseguire il corpo, se la condizione è vera;</li>
+<li>eseguire <code>i++</code>;</li>
+<li>tornare al controllo.</li>
+</ol>
+<p>Il ciclo equivale a:</p>
+<pre><code>i = 0;
+while (i &lt; DIM) {
+  if (i % 2 != 0) {
+    somma += a[i];
+  }
+  i++;
+}</code></pre>
+
+<h3>Seconda soluzione: visitare solo gli indici utili</h3>
+<p>Gli indici dispari sono 1, 3, 5, 7, &hellip;: si parte da 1 e si avanza di 2.</p>
+<pre><code>for (i = 1; i &lt; DIM; i += 2) {
+  somma += a[i];
+}</code></pre>
+<p>Non serve più l'<code>if</code>: ogni indice visitato è già dispari. La versione evita di visitare gli indici pari e rende esplicita la richiesta del problema.</p>
+
+<h2>13. Conversione da base dieci a una base tra 2 e 16</h2>
+<div class="box ex">
+<div class="bt">Richiesta</div>
+<p>Leggere un intero non negativo <code>n</code> e una base <code>b</code> compresa tra 2 e 16, e stampare la rappresentazione di <code>n</code> nella base scelta.</p>
+</div>
+<p>Le due difficoltà principali: ottenere le cifre nell'ordine corretto e rappresentare i valori da 10 a 15 con i caratteri da <code>A</code> a <code>F</code>.</p>
+
+<h3>Divisioni successive</h3>
+<p>A ogni passo: <code>resto = n % b;</code> e <code>n = n / b;</code>, finché il quoziente diventa zero. Esempio, $26_{10}$ in base 2:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Numero</th><th>Quoziente</th><th>Resto</th></tr></thead>
+<tbody>
+<tr><td>26</td><td>13</td><td>0</td></tr>
+<tr><td>13</td><td>6</td><td>1</td></tr>
+<tr><td>6</td><td>3</td><td>0</td></tr>
+<tr><td>3</td><td>1</td><td>1</td></tr>
+<tr><td>1</td><td>0</td><td>1</td></tr>
+</tbody>
+</table>
+</div>
+<p>Leggendo i resti dall'ultimo al primo: $26_{10}=11010_2$.</p>
+
+<h3>Perché salvare i resti?</h3>
+<p>Le divisioni producono prima la cifra meno significativa (a destra), mentre la stampa deve partire dalla più significativa (a sinistra). Nella soluzione della lezione si calcolano e salvano tutti i resti, poi si percorre l'array al contrario. L'array è la strategia scelta per invertire l'ordine, non l'unica possibile.</p>
+
+<h3>Il &laquo;dizionario&raquo; di caratteri</h3>
+<pre><code>char cifre[16] = {
+  '0', '1', '2', '3',
+  '4', '5', '6', '7',
+  '8', '9', 'A', 'B',
+  'C', 'D', 'E', 'F'
+};</code></pre>
+<p>Ogni indice corrisponde al valore numerico della cifra (<code>cifre[5]</code> è <code>'5'</code>, <code>cifre[10]</code> è <code>'A'</code>, <code>cifre[15]</code> è <code>'F'</code>). Il &laquo;dizionario&raquo; è semplicemente una tabella di corrispondenza realizzata con un array.</p>
+
+<h3>Doppia indicizzazione</h3>
+<p>Se <code>resti[i] == 10</code>, allora <code>cifre[resti[i]]</code> equivale a <code>cifre[10]</code>, cioè <code>'A'</code>. La stampa è:</p>
+<pre><code>printf("%c", cifre[resti[i]]);</code></pre>
+<p>Si legge dall'interno verso l'esterno: <code>i</code> individua una posizione in <code>resti</code>; <code>resti[i]</code> è il valore della cifra; quel valore diventa indice di <code>cifre</code>; <code>%c</code> stampa il carattere.</p>
+
+<h3>Contatore e ultimo indice</h3>
+<pre><code>int i = 0;
+while (n &gt; 0) {
+  resti[i] = n % b;
+  n /= b;
+  i++;
+}</code></pre>
+<p>Alla fine <code>i</code> indica <strong>quanti</strong> resti sono stati salvati, non l'indice dell'ultimo. Con tre resti gli indici usati sono 0, 1, 2 e <code>i</code> vale 3. Prima di leggere all'indietro serve quindi <code>i--;</code>, poi:</p>
+<pre><code>while (i &gt;= 0) {
+  printf("%c", cifre[resti[i]]);
+  i--;
+}</code></pre>
+<p>È la distinzione tra quantità di elementi e indice dell'ultimo elemento, già incontrata nella stampa inversa.</p>
+
+<h3>Due problemi della versione essenziale</h3>
+<ul>
+<li>Con <code>while (n &gt; 0)</code>, il numero 0 non produce alcun resto e quindi non viene stampato: si risolve con un <code>do-while</code>.</li>
+<li>Un array di dieci resti può essere troppo piccolo: la rappresentazione binaria di 1024 richiede undici cifre. Bisogna scegliere una capacità e controllarla prima di scrivere nell'array. <code>DIM = 10</code> nella lezione era solo un valore esemplificativo.</li>
+</ul>
+
+<h3>Programma completo con controlli</h3>
+<p>Mantiene l'algoritmo della lezione e aggiunge controllo della lettura, verifica del dominio, gestione di 0 e controllo della capacità. <code>scanf</code> restituisce il numero di assegnazioni riuscite: per due interi ci si aspetta 2.</p>
+<pre><code>#include &lt;stdio.h&gt;
+
+#define MAX_CIFRE 16
+#define DIM 128
+
+int main(void) {
+  int n, b;
+  int resti[DIM];
+  int i = 0;
+  char cifre[MAX_CIFRE] = {
+    '0', '1', '2', '3',
+    '4', '5', '6', '7',
+    '8', '9', 'A', 'B',
+    'C', 'D', 'E', 'F'
+  };
+
+  printf("Inserisci un intero non negativo e una base tra 2 e 16:\n");
+  if (scanf("%d %d", &amp;n, &amp;b) != 2) {
+    printf("Input non valido.\n");
+    return 1;
+  }
+  if (n &lt; 0 || b &lt; 2 || b &gt; 16) {
+    printf("Numero o base non validi.\n");
+    return 1;
+  }
+
+  do {
+    if (i &gt;= DIM) {
+      printf("Spazio insufficiente per memorizzare le cifre.\n");
+      return 1;
+    }
+    resti[i] = n % b;
+    n /= b;
+    i++;
+  } while (n &gt; 0);
+
+  printf("Risultato: ");
+  i--;
+  while (i &gt;= 0) {
+    printf("%c", cifre[resti[i]]);
+    i--;
+  }
+  printf("\n");
+  return 0;
+}</code></pre>
+<p>Qui il <code>do-while</code> è adatto: anche il numero zero deve generare una cifra. Non c'è un terminatore da scartare, si sta costruendo la rappresentazione del dato.</p>
+
+<div class="box ex">
+<div class="bt">Esempio &mdash; 254 in base 16</div>
+<p>$254\div16=15$ con resto $14$; $15\div16=0$ con resto $15$. Quindi <code>resti[0] = 14</code>, <code>resti[1] = 15</code>. Stampando al contrario: <code>cifre[15]</code> &rarr; <code>'F'</code>, <code>cifre[14]</code> &rarr; <code>'E'</code>.</p>
+<p>Risultato: $254_{10}=FE_{16}$. Controllo: $15\cdot16+14=254$.</p>
+</div>
+
+<h2>14. Precisazioni da non imparare male</h2>
+<div class="tbl">
+<table>
+<thead><tr><th>Formulazione da evitare</th><th>Concetto corretto</th></tr></thead>
+<tbody>
+<tr><td>&laquo;Il <code>main</code> può essere normalmente <code>void</code>&raquo;</td><td>Per programmi portabili si usa <code>int main(void)</code>.</td></tr>
+<tr><td>&laquo;Un errore deve restituire <code>-1</code>&raquo;</td><td>Non è una regola universale; esiste <code>EXIT_FAILURE</code>.</td></tr>
+<tr><td>&laquo;<code>%.4f</code> taglia le cifre in più&raquo;</td><td>La rappresentazione viene arrotondata a quattro decimali.</td></tr>
+<tr><td>&laquo;Gli elementi mancanti di un array inizializzato dipendono dal compilatore&raquo;</td><td>Nell'inizializzazione parziale gli elementi rimanenti valgono zero.</td></tr>
+<tr><td>&laquo;Un formato sbagliato in <code>scanf</code> converte automaticamente il dato&raquo;</td><td>Il tipo dell'indirizzo deve corrispondere allo specificatore.</td></tr>
+</tbody>
+</table>
+</div>
+<p>Due distinzioni terminologiche:</p>
+<ul>
+<li><code>#define DIM 5</code> definisce una <strong>macro</strong>, non una variabile costante;</li>
+<li><code>int main(void) { ... }</code> è una <strong>definizione</strong> di funzione; un <strong>prototipo</strong> dichiara la funzione senza fornirne il corpo.</li>
+</ul>
+<p>Le slide distinguono inoltre le costanti dichiarate con <code>const</code> dalle direttive <code>#define</code>.</p>
+
+<h2>15. Scheda rapida per il ripasso</h2>
+<h3>Input e output</h3>
+<pre><code>scanf("%d", &amp;n);
+scanf("%f", &amp;x);
+printf("%d\n", n);
+printf("%.4f\n", x);
+printf("%c\n", carattere);</code></pre>
+
+<h3>Selezione e cicli</h3>
+<pre><code>if (condizione) {
+  /* ramo vero */
+} else {
+  /* ramo falso */
+}
+
+while (condizione) {
+  /* da zero iterazioni in su */
+}
+
+do {
+  /* almeno una iterazione */
+} while (condizione);
+
+for (i = 0; i &lt; DIM; i++) {
+  /* visita gli indici da 0 a DIM - 1 */
+}</code></pre>
+
+<h3>Array e indici</h3>
+<pre><code>int a[5] = {3, 9, 7, 4, 8};
+a[0];          /* primo elemento */
+a[DIM - 1];    /* ultimo elemento, se DIM e' la dimensione */</code></pre>
+
+<h3>Schemi algoritmici da riconoscere</h3>
+<ul>
+<li><strong>Somma progressiva:</strong> inizializzare a 0, poi aggiungere ogni dato valido.</li>
+<li><strong>Due massimi:</strong> salvare prima il vecchio primo massimo nel secondo.</li>
+<li><strong>Indici dispari:</strong> partire da 1 e avanzare di 2.</li>
+<li><strong>Riempimento di un array:</strong> il contatore finale è il numero di elementi.</li>
+<li><strong>Lettura inversa:</strong> partire da <code>numero_elementi - 1</code>.</li>
+<li><strong>Conversione di base:</strong> resti con <code>%</code>, quozienti con <code>/</code>, stampa dei resti al contrario.</li>
+<li><strong>Conversione cifra-carattere:</strong> usare il resto come indice di una tabella.</li>
+</ul>
+<p>Il punto non è imparare a memoria i singoli listati, ma riconoscere quando riutilizzare ciascun ragionamento.</p>

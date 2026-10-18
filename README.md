@@ -12,5 +12,6 @@ Spiegava meglio Zani, e che cazzo
 ### Esercitazioni:
 1. Rappresentazione dell’informazione
 2. Conversioni, IEEE 754 e programmi in assembler
+3. Von Neumann e C: massimi, cicli, array e conversione di base (15.10)
 
 https://gxgukinav.github.io/Fondamenti-di-Informatica/
