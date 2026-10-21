@@ -8,6 +8,7 @@ Spiegava meglio Zani, e che cazzo
 2. Elaborazione dell’informazione
 3. Dall'assembler al C: variabili, condizioni, cicli e array (06.10)
 4. Progettazione degli algoritmi, sintassi C e tipi di dato (13.10)
+5. Array, strutture e puntatori in C (20.10)
 
 ### Esercitazioni:
 1. Rappresentazione dell’informazione

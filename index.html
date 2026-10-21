@@ -56,6 +56,24 @@
       </button>
     </div>
   </div>
+  <div class="row">
+    <span class="lbl">Code theme</span>
+    <div class="themes col">
+      <button class="th cth" data-code-btn="default" aria-pressed="true" type="button">
+        <span class="cdots" data-dots="default"></span><span class="cl">Default</span><span class="rd"></span>
+      </button>
+      <button class="th cth" data-code-btn="codeblocks" aria-pressed="false" type="button">
+        <span class="cdots" data-dots="codeblocks"></span><span class="cl">Codeblocks</span><span class="rd"></span>
+      </button>
+      <button class="th cth" data-code-btn="custom" aria-pressed="false" type="button">
+        <span class="cdots" data-dots="custom"></span>
+        <span class="cl">Custom
+          <svg class="edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </span><span class="rd"></span>
+      </button>
+    </div>
+    <p class="chint" id="codeHint" hidden>Tocca di nuovo Custom per modificare i colori.</p>
+  </div>
 </div>
 
 <div class="mode-menu" id="modeMenu" role="menu" hidden></div>
@@ -79,6 +97,47 @@
   <button class="toc-fab" id="tocBtn" aria-label="Indice della pagina" aria-expanded="false" aria-controls="tocPanel" hidden>
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor"/></svg>
   </button>
+</div>
+
+
+<!-- Finestra "Colori del codice" (si apre toccando di nuovo Custom nel menu aA) -->
+<div class="cmodal" id="codeModal" hidden>
+  <div class="cm-back" data-close></div>
+  <div class="cm-dialog" id="cmDialog" role="dialog" aria-modal="true" aria-labelledby="cmTitle" tabindex="-1">
+    <div class="cm-head">
+      <div>
+        <div class="cm-title" id="cmTitle">Colori del codice</div>
+        <div class="cm-sub">Tema Custom &middot; le modifiche si salvano da sole</div>
+      </div>
+      <button class="cm-x" id="cmClose" type="button" aria-label="Chiudi">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="cm-body">
+      <div class="cm-prev">
+        <div class="cm-cap">Anteprima &middot; tocca un elemento per cambiarne il colore</div>
+        <pre id="cmPreview"><code class="nohl"></code></pre>
+      </div>
+      <div class="cm-list" id="cmList"></div>
+    </div>
+    <div class="cm-foot">
+      <button class="cm-btn" id="cmReset" type="button">Ripristina</button>
+      <button class="cm-btn primary" id="cmDone" type="button">Fine</button>
+    </div>
+  </div>
+
+  <div class="cpop" id="colorPop" role="dialog" aria-label="Scegli il colore" hidden>
+    <div class="cp-title"><span class="cp-dot" id="cpDot"></span><span id="cpTitle"></span></div>
+    <div class="cp-sv" id="cpSV" tabindex="0" aria-label="Saturazione e luminosit&agrave; (usa le frecce)"><div class="cp-knob"></div></div>
+    <div class="cp-hue" id="cpHue" tabindex="0" role="slider" aria-label="Tonalit&agrave;" aria-valuemin="0" aria-valuemax="360" aria-valuenow="0"><div class="cp-knob"></div></div>
+    <div class="cp-row"><span class="cp-lbl">HEX</span><input class="cp-in" id="cpHex" type="text" maxlength="7" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Colore esadecimale"></div>
+    <div class="cp-row"><span class="cp-lbl">RGB</span>
+      <input class="cp-in cp-n" type="text" inputmode="numeric" maxlength="3" autocomplete="off" aria-label="Rosso, da 0 a 255">
+      <input class="cp-in cp-n" type="text" inputmode="numeric" maxlength="3" autocomplete="off" aria-label="Verde, da 0 a 255">
+      <input class="cp-in cp-n" type="text" inputmode="numeric" maxlength="3" autocomplete="off" aria-label="Blu, da 0 a 255">
+    </div>
+    <div class="cp-row"><span class="cp-lbl">BIN</span><code class="cp-bin" id="cpBin" title="R G B in binario a 8 bit"></code></div>
+  </div>
 </div>
 
 

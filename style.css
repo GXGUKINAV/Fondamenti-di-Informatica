@@ -231,5 +231,122 @@ body:not(.side) .toc-fab[aria-expanded="true"] svg { transform: rotate(270deg); 
 
 /* Codice (pseudo-C, C, ecc.) */
 code { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace; font-size: .86em; padding: .1em .35em; border-radius: 5px; background: color-mix(in srgb, var(--muted) 16%, transparent); }
-pre { margin: 1.1rem 0; padding: .8rem 1rem; overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; line-height: 1.5; tab-size: 2; }
+pre { margin: 1.1rem 0; padding: .8rem 1rem; overflow-x: auto; background: var(--c-bg, var(--surface)); color: var(--c-fg, var(--ink)); border: 1px solid color-mix(in srgb, var(--c-fg, var(--ink)) 16%, transparent); border-radius: 10px; line-height: 1.5; tab-size: 2; }
 pre code { padding: 0; background: none; font-size: .86rem; white-space: pre; }
+
+
+/* =====================================================================
+   COLORI DEL CODICE
+   Le variabili --c-* sono impostate da script.js in base al Code theme
+   scelto (Default / Codeblocks / Custom) dal menu aA.
+   ===================================================================== */
+.tk-k { color: var(--c-kw); }
+.tk-t { color: var(--c-ty); }
+.tk-u { color: var(--c-ut); }
+.tk-v { color: var(--c-vd); }
+.tk-f { color: var(--c-fn); }
+.tk-s { color: var(--c-st); }
+.tk-e { color: var(--c-es); }
+.tk-n { color: var(--c-nu); }
+.tk-c { color: var(--c-cm); font-style: var(--c-ital, normal); }
+.tk-p { color: var(--c-pp); }
+.tk-m { color: var(--c-ma); }
+.tk-o { color: var(--c-op); }
+.tk-k, .tk-t, .tk-u { font-weight: var(--c-bold, 400); }
+
+/* ---------- Impostazioni aA: riga "Code theme" ---------- */
+.settings { max-height: calc(100vh - 72px); max-height: calc(100dvh - 72px); overflow-y: auto; }
+.themes.col { flex-direction: column; }
+.cth { justify-content: flex-start; gap: 10px; padding: 0 14px; height: 44px; }
+.cth .cl { font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
+.cth .rd { margin-left: auto; flex: none; }
+.cth .edit { width: 14px; height: 14px; display: none; color: var(--accent); }
+.cth[aria-pressed="true"] .edit { display: inline-block; }
+.cdots { display: inline-flex; gap: 3px; padding: 5px 6px; border-radius: 7px; border: 1px solid var(--line); flex: none; }
+.cdots i { display: block; width: 8px; height: 8px; border-radius: 50%; }
+.chint { margin: 8px 2px 0; font-size: 12px; line-height: 1.4; color: var(--muted); }
+
+/* ---------- Finestra "Colori del codice" ---------- */
+@keyframes cmpop { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+.cmodal { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 12px; font-family: var(--ui); }
+.cm-back { position: absolute; inset: 0; background: rgba(8, 10, 16, .55); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); animation: fade .18s ease-out; }
+.cm-dialog {
+  position: relative; width: min(560px, 100%);
+  height: min(760px, calc(100vh - 24px)); height: min(760px, calc(100dvh - 24px));
+  display: flex; flex-direction: column; overflow: hidden; outline: none;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+  box-shadow: var(--shadow); animation: cmpop .18s ease-out;
+}
+.cm-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 12px 12px 20px; border-bottom: 1px solid var(--line); }
+.cm-title { font-size: 16px; font-weight: 600; line-height: 1.3; }
+.cm-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.cm-x { flex: none; width: 38px; height: 38px; border: 0; border-radius: 50%; background: transparent; display: grid; place-items: center; cursor: pointer; }
+.cm-x:hover { background: var(--accent-soft); }
+
+.cm-body { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+.cm-prev { flex: 0 1 auto; max-height: min(320px, 44vh); max-height: min(320px, 44dvh); overflow: auto; padding: 12px 14px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; }
+.cm-cap { flex: none; margin: 0 2px 8px; font-size: 11.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.cm-prev pre { margin: 0; flex: 1 0 auto; cursor: pointer; }
+.cm-prev pre code { font-size: 12.5px; }
+.cm-list { flex: 1 1 0; min-height: 0; overflow-y: auto; padding: 12px 14px 14px; overscroll-behavior: contain; }
+
+.cm-group { background: var(--bg); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.cm-row { width: 100%; min-height: 50px; display: flex; align-items: center; gap: 10px; padding: 6px 14px; border: 0; border-radius: 0; background: transparent; text-align: left; cursor: pointer; font-size: 14.5px; line-height: 1.3; }
+.cm-row + .cm-row { border-top: 1px solid var(--line); }
+.cm-row:hover, .cm-row.sel { background: var(--accent-soft); }
+.cm-row:focus-visible { outline-offset: -2px; }
+.cm-l { flex: 1; min-width: 0; }
+.hx { flex: none; font: 12px ui-monospace, 'SF Mono', Menlo, Consolas, monospace; color: var(--muted); }
+.ball { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--line); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 7%, transparent); }
+.sw { flex: none; position: relative; width: 42px; height: 24px; border-radius: 12px; background: var(--line); transition: background .15s; }
+.sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .35); transition: transform .15s; }
+[aria-checked="true"] > .sw { background: var(--accent); }
+[aria-checked="true"] > .sw::after { transform: translateX(18px); }
+
+.cm-foot { flex: none; display: flex; justify-content: space-between; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--line); }
+.cm-btn { height: 38px; padding: 0 18px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; font-size: 14px; }
+.cm-btn:hover { border-color: var(--accent); color: var(--accent); }
+.cm-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 600; }
+.cm-btn.primary:hover { color: var(--bg); filter: brightness(1.08); }
+
+/* PC, tablet e telefono in orizzontale: anteprima a sinistra, colori a destra */
+@media (min-width: 720px), (orientation: landscape) and (max-height: 520px) {
+  .cm-dialog { width: min(940px, 100%); height: min(640px, calc(100vh - 24px)); height: min(640px, calc(100dvh - 24px)); }
+  .cm-body { flex-direction: row; }
+  .cm-prev { flex: 1.25 1 0; max-height: none; border-bottom: 0; border-right: 1px solid var(--line); }
+  .cm-prev pre code { font-size: 13px; }
+  .cm-list { flex: 1 1 0; }
+}
+
+/* ---------- Selettore colore ---------- */
+.cpop { position: fixed; z-index: 70; width: min(264px, calc(100vw - 24px)); padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); animation: pop .14s ease-out; }
+.cp-title { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13px; font-weight: 600; }
+.cp-dot { flex: none; width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--line); }
+.cp-sv { position: relative; height: 140px; border-radius: 10px; cursor: crosshair; touch-action: none; background-image: linear-gradient(to top, #000, rgba(0, 0, 0, 0)), linear-gradient(to right, #fff, rgba(255, 255, 255, 0)); }
+.cp-hue { position: relative; height: 16px; margin-top: 14px; border-radius: 8px; cursor: pointer; touch-action: none; background: linear-gradient(to right, #f00, #ff0 16.67%, #0f0 33.33%, #0ff 50%, #00f 66.67%, #f0f 83.33%, #f00); }
+.cp-knob { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .45), 0 1px 4px rgba(0, 0, 0, .4); pointer-events: none; }
+.cp-hue .cp-knob { top: 50%; }
+.cp-sv:focus-visible, .cp-hue:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cp-row { display: flex; align-items: center; gap: 6px; margin-top: 12px; }
+.cp-lbl { flex: none; width: 34px; font-size: 11px; font-weight: 600; letter-spacing: .04em; color: var(--muted); }
+.cp-in { flex: 1; min-width: 0; height: 34px; padding: 0 6px; text-align: center; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: 16px ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
+.cp-in:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.cp-bin { flex: 1; min-width: 0; padding: 0; background: none; font-size: 11.5px; line-height: 1.5; letter-spacing: -.01em; white-space: nowrap; user-select: all; }
+
+@media print { .cmodal { display: none !important; } }
+
+
+/* Scrollbar sottile e grigia (come indice e menu dei Day) anche nella finestra dei colori */
+.cm-prev, .cm-list, .settings { overscroll-behavior: contain; }
+.cm-prev::-webkit-scrollbar, .cm-list::-webkit-scrollbar, .settings::-webkit-scrollbar { width: 8px; }
+.cm-prev::-webkit-scrollbar-button, .cm-list::-webkit-scrollbar-button, .settings::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+.cm-prev::-webkit-scrollbar-track, .cm-list::-webkit-scrollbar-track, .settings::-webkit-scrollbar-track { background: transparent; margin: 14px 0; }
+.cm-prev::-webkit-scrollbar-thumb, .cm-list::-webkit-scrollbar-thumb, .settings::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--muted) 55%, transparent); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+/* barra orizzontale dei blocchi di codice */
+pre::-webkit-scrollbar { height: 8px; }
+pre::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+pre::-webkit-scrollbar-track { background: transparent; margin: 0 10px; }
+pre::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--muted) 55%, transparent); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+@supports not selector(::-webkit-scrollbar) {
+  .cm-prev, .cm-list, .settings, pre { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--muted) 55%, transparent) transparent; }
+}

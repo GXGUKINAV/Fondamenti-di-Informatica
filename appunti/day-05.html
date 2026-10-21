@@ -1,0 +1,604 @@
+<h2>1. Il filo logico della lezione</h2>
+<p>La lezione mette insieme tre modi diversi di organizzare e usare i dati:</p>
+<ul>
+<li><strong>Array:</strong> raggruppano elementi dello <strong>stesso tipo</strong>.</li>
+<li><strong>struct:</strong> raggruppano campi che possono avere <strong>tipi diversi</strong>.</li>
+<li><strong>Puntatori:</strong> permettono di accedere ai dati attraverso il loro <strong>indirizzo</strong> in memoria.</li>
+</ul>
+<p>Il passaggio centrale è la differenza tra <strong>copiare un valore</strong> e <strong>copiare un riferimento</strong> a quel valore: nel secondo caso non si crea un secondo dato, ma un altro modo per raggiungere lo stesso dato.</p>
+<div class="box warn">
+<div class="bt">Imprecisioni nella spiegazione orale</div>
+<p>Durante la lezione alcuni passaggi, soprattutto sull'assegnamento tra array, confondono array e puntatori. Questi appunti riportano la versione corretta, segnalando dove non conviene prendere alla lettera la spiegazione orale.</p>
+</div>
+
+<h2>2. Ripasso sugli array</h2>
+<p>Un array è una sequenza di elementi dello stesso tipo, accessibili tramite un indice.</p>
+<pre><code>int numeri[5];</code></pre>
+<p>Crea cinque elementi di tipo <code>int</code>, con indici da 0 a 4. In generale, con $N$ elementi gli indici validi vanno da $0$ a $N-1$: per questo il ciclo tipico usa <code>i &lt; N</code> e non <code>i &lt;= N</code>.</p>
+<pre><code>for (int i = 0; i &lt; 5; i++) {
+  numeri[i] = i + 1;
+}</code></pre>
+<p>Risultato: <code>numeri = [1, 2, 3, 4, 5]</code>.</p>
+
+<h3>Definire un tipo array con <code>typedef</code></h3>
+<pre><code>typedef int Vettore[5];
+Vettore numeri;
+Vettore altriNumeri;</code></pre>
+<p><code>Vettore</code> è il nome del <strong>tipo</strong>; <code>numeri</code> e <code>altriNumeri</code> sono le <strong>variabili</strong>. Dare un nome al tipo rende più chiaro il significato dei dati.</p>
+
+<h3>Usare <code>#define</code> per le dimensioni</h3>
+<pre><code>#define DIM 5
+int numeri[DIM];</code></pre>
+<p>Il preprocessore sostituisce <code>DIM</code> con <code>5</code> prima della compilazione. Se la dimensione cambia, si modifica un solo punto del codice.</p>
+<div class="box warn">
+<div class="bt">Niente punto e virgola nella macro</div>
+<pre><code>#define DIM 5     /* Corretto */
+#define DIM 5;    /* Sbagliato per questo utilizzo */</code></pre>
+<p>Nel secondo caso anche il <code>;</code> entra nel testo sostituito e rovina espressioni come <code>int numeri[DIM];</code>.</p>
+</div>
+
+<h2>3. Copiare un array: cosa si può fare davvero</h2>
+<pre><code>int a[3] = {10, 20, 30};
+int b[3];
+
+b = a;   /* ERRORE */</code></pre>
+<p>In C non si può assegnare direttamente un intero array a un altro array. Non si ottiene né una copia né due nomi per lo stesso array: si ottiene un <strong>errore di compilazione</strong>.</p>
+
+<h3>Copia elemento per elemento</h3>
+<pre><code>for (int i = 0; i &lt; 3; i++) {
+  b[i] = a[i];
+}</code></pre>
+<p>Dopo la copia <code>a</code> e <code>b</code> valgono entrambi <code>[10, 20, 30]</code>, ma sono <strong>indipendenti</strong>: dopo <code>b[0] = 99;</code> si ha <code>a = [10, 20, 30]</code> e <code>b = [99, 20, 30]</code>. Si sono copiati i valori, non condivisi gli elementi.</p>
+
+<h2>4. Esercizio: concatenare due sequenze in ordine alfabetico</h2>
+<div class="box ex">
+<div class="bt">Richiesta</div>
+<ol>
+<li>Leggere due sequenze di esattamente 50 caratteri.</li>
+<li>Capire quale precede l'altra nell'ordinamento.</li>
+<li>Copiarle in un terzo array, mettendo prima quella che precede.</li>
+<li>Stampare il risultato.</li>
+</ol>
+</div>
+
+<h3>Confronto: cercare il primo carattere diverso</h3>
+<p>Esempio con <code>CASA</code> e <code>CANE</code>:</p>
+<ul>
+<li><code>C == C</code>: continua;</li>
+<li><code>A == A</code>: continua;</li>
+<li><code>S != N</code>: si decide qui.</li>
+</ul>
+<p>Nella codifica ASCII, <code>'N' &lt; 'S'</code>, quindi <code>CANE</code> precede <code>CASA</code>. Il resto non serve: il primo carattere diverso determina l'ordine.</p>
+<div class="box warn">
+<div class="bt">Non è un ordinamento linguistico</div>
+<p>È un confronto basato sui <strong>codici</strong> dei caratteri: non gestisce automaticamente maiuscole, minuscole e accenti.</p>
+</div>
+
+<h3>Il ciclo di confronto</h3>
+<pre><code>i = 0;
+while (i &lt; N &amp;&amp; a[i] == b[i]) {
+  i++;
+}</code></pre>
+<p>All'uscita ci sono due casi:</p>
+<ul>
+<li><code>i == N</code>: tutti i caratteri confrontati sono uguali;</li>
+<li><code>i &lt; N</code>: <code>i</code> è la prima posizione con caratteri diversi.</li>
+</ul>
+<p>La condizione <code>i &lt; N</code> va messa <strong>prima</strong> dell'accesso agli elementi, così il confronto si ferma prima di uscire dai limiti dell'array. La scelta dell'ordine è:</p>
+<pre><code>if (i == N || a[i] &lt; b[i]) {
+  /* Copia prima a, poi b */
+} else {
+  /* Copia prima b, poi a */
+}</code></pre>
+<p>Se le sequenze sono identiche, l'ordine di concatenazione non cambia il risultato.</p>
+
+<h3>Versione compatta</h3>
+<p>Il frammento presuppone che <code>a</code> e <code>b</code> contengano già $N$ caratteri.</p>
+<pre><code>#define N 50
+
+char a[N], b[N];
+char risultato[2 * N];
+int i = 0;
+
+while (i &lt; N &amp;&amp; a[i] == b[i]) {
+  i++;
+}
+
+if (i == N || a[i] &lt; b[i]) {
+  for (int j = 0; j &lt; N; j++) {
+    risultato[j] = a[j];
+    risultato[N + j] = b[j];
+  }
+} else {
+  for (int j = 0; j &lt; N; j++) {
+    risultato[j] = b[j];
+    risultato[N + j] = a[j];
+  }
+}
+
+for (int j = 0; j &lt; 2 * N; j++) {
+  printf("%c", risultato[j]);
+}</code></pre>
+
+<h3>Array di caratteri e stringhe C non sono sempre la stessa cosa</h3>
+<p>Un array con 50 caratteri non è necessariamente una stringa C valida: una stringa deve terminare con <code>'\0'</code>. Per 50 caratteri di testo servono quindi <strong>51 celle</strong>.</p>
+<pre><code>char parola[51];
+scanf("%50s", parola);</code></pre>
+<p><code>%s</code> aggiunge il terminatore e si ferma anche davanti a spazi o altri separatori: non equivale a leggere esattamente 50 caratteri con <code>%c</code>.</p>
+<div class="box warn">
+<div class="bt">Attenzione a <code>risultato[100]</code></div>
+<p>Se tutte le 100 celle contengono caratteri del risultato, non c'è spazio per <code>'\0'</code>. La stampa carattere per carattere va bene; <code>printf("%s", risultato);</code> non è sicuro senza aggiungere e gestire il terminatore.</p>
+</div>
+
+<h3>Variante con matrice</h3>
+<pre><code>char sequenze[2][50];</code></pre>
+<ul>
+<li><code>sequenze[0]</code>: prima sequenza;</li>
+<li><code>sequenze[1]</code>: seconda sequenza;</li>
+<li><code>sequenze[1][3]</code>: quarto carattere della seconda sequenza.</li>
+</ul>
+<p>La matrice permette di usare cicli annidati e di ridurre il codice duplicato.</p>
+
+<h2>5. Le struct: dati eterogenei</h2>
+<p>Gli array contengono elementi dello stesso tipo. Una persona, invece, ha nome e cognome (sequenze di caratteri), stipendio (numero), data di assunzione (giorno, mese, anno). Per raggruppare informazioni di questo genere si usa una <strong>struttura</strong> (o record); in C la parola chiave è <code>struct</code>.</p>
+
+<h3>Definire un tipo <code>Data</code></h3>
+<pre><code>typedef struct {
+  int giorno;
+  int mese;
+  int anno;
+} Data;
+
+Data oggi;
+Data assunzione;</code></pre>
+<ul>
+<li><code>Data</code>: nome del tipo;</li>
+<li><code>oggi</code>: variabile;</li>
+<li><code>giorno</code>, <code>mese</code>, <code>anno</code>: campi della struttura.</li>
+</ul>
+
+<h3>Accedere ai campi con il punto</h3>
+<pre><code>oggi.giorno = 20;
+oggi.mese = 10;
+oggi.anno = 2026;</code></pre>
+<p>La forma generale è <code>variabile.campo</code>. Il campo deve esistere nella definizione del tipo: <code>oggi.stipendio</code> sarebbe un errore.</p>
+
+<h3>Strutture dentro altre strutture</h3>
+<pre><code>typedef struct {
+  char destinatario[101];
+  double importo;
+  Data dataEmissione;
+} Fattura;
+
+Fattura fattura;
+fattura.importo = 150.50;
+fattura.dataEmissione.giorno = 20;
+fattura.dataEmissione.mese = 10;
+fattura.dataEmissione.anno = 2026;</code></pre>
+<p>Ogni punto entra in un livello della struttura: <code>fattura</code> &rarr; <code>dataEmissione</code> &rarr; <code>giorno</code>, <code>mese</code>, <code>anno</code>. Il tipo <code>Data</code> deve essere <strong>già definito</strong> quando lo si usa come campo di <code>Fattura</code>.</p>
+
+<h3>Array e strutture si possono combinare</h3>
+<p>Array di strutture:</p>
+<pre><code>Fattura archivio[1000];
+archivio[0].importo = 250.0;</code></pre>
+<p>Array dentro una struttura:</p>
+<pre><code>typedef struct {
+  char nome[31];
+  char cognome[31];
+  double stipendio;
+} Dipendente;
+
+Dipendente dip;
+if (dip.cognome[0] == 'A') {
+  /* Il cognome inizia con A */
+}</code></pre>
+<p>Nell'ultimo frammento si presume che il cognome sia già stato inizializzato. Gli operatori <code>[]</code> e <code>.</code> si combinano seguendo la forma dei dati.</p>
+
+<h3>Perché un numero di telefono si salva come testo?</h3>
+<p>Un numero di telefono è un <strong>identificatore</strong>, non una quantità su cui fare calcoli. Come sequenza di caratteri conserva, per esempio, lo zero iniziale del prefisso:</p>
+<pre><code>char telefono[21] = "0372123456";</code></pre>
+<p>La scelta del tipo dipende dal <strong>significato</strong> del dato, non dal fatto che contenga cifre.</p>
+
+<h2>6. Assegnamento tra strutture</h2>
+<p>Diversamente dagli array, due strutture dello stesso tipo si possono assegnare direttamente:</p>
+<pre><code>Dipendente dip1;
+Dipendente dip2;
+
+/* Si presume che dip1 sia già inizializzato. */
+dip2 = dip1;</code></pre>
+<p>L'assegnamento copia tutti i campi, compresi gli eventuali array contenuti nella struttura: anche <code>nome</code> e <code>cognome</code> vengono copiati.</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Operazione</th><th>Risultato</th></tr></thead>
+<tbody>
+<tr><td><code>b = a</code>, con <code>a</code> e <code>b</code> array</td><td>Non consentita</td></tr>
+<tr><td><code>dip2 = dip1</code>, strutture dello stesso tipo</td><td>Copia la struttura</td></tr>
+<tr><td><code>p = q</code>, puntatori compatibili</td><td>Copia il puntatore, non il dato puntato</td></tr>
+</tbody>
+</table>
+</div>
+<p>Questa distinzione è il ponte verso la seconda parte della lezione.</p>
+
+<h2>7. Esercizio d'esame: rappresentare un'autovettura</h2>
+<div class="box ex">
+<div class="bt">Richiesta</div>
+<p>Rappresentare un'autovettura con nome, marca, tipo di motore, numero di cilindri e un insieme di accessori. È un esercizio di <strong>progettazione del tipo di dato</strong>, non ancora di scrittura dell'algoritmo.</p>
+</div>
+<p>Una possibile rappresentazione, assumendo che il tipo <code>Accessorio</code> sia già definito:</p>
+<pre><code>#define MAX_NOME 20
+#define MAX_MARCA 15
+#define MAX_ACCESSORI 50
+
+typedef enum {
+  BENZINA,
+  DIESEL
+} TipoMotore;
+
+typedef enum {
+  QUATTRO,
+  SEI,
+  OTTO
+} TipoCilindri;
+
+typedef struct {
+  char nome[MAX_NOME + 1];
+  char marca[MAX_MARCA + 1];
+  TipoMotore motore;
+  TipoCilindri cilindri;
+  Accessorio accessori[MAX_ACCESSORI];
+  int numeroAccessori;
+} Autovettura;</code></pre>
+<ul>
+<li>Il <code>+ 1</code> riserva lo spazio per <code>'\0'</code> nei campi usati come stringhe.</li>
+<li><code>numeroAccessori</code> distingue la <strong>capacità massima</strong> dell'array dagli elementi effettivamente presenti.</li>
+<li>I nomi dell'<code>enum</code> non sono stringhe: senza assegnazioni esplicite, <code>QUATTRO</code>, <code>SEI</code> e <code>OTTO</code> valgono 0, 1 e 2, <strong>non</strong> 4, 6 e 8.</li>
+</ul>
+
+<h2>8. Puntatori: l'idea fondamentale</h2>
+<p>Una variabile contiene un valore; un puntatore può contenere l'<strong>indirizzo</strong> attraverso cui raggiungere una variabile.</p>
+<pre><code>int x = 37;
+int *p = &amp;x;</code></pre>
+<ul>
+<li><code>x</code> contiene 37;</li>
+<li><code>&amp;x</code> è l'indirizzo di <code>x</code>;</li>
+<li><code>p</code> contiene quell'indirizzo;</li>
+<li><code>*p</code> permette di accedere all'oggetto puntato, cioè <code>x</code>.</li>
+</ul>
+
+<h3>I due operatori da distinguere</h3>
+<div class="tbl">
+<table>
+<thead><tr><th>Espressione</th><th>Come leggerla</th></tr></thead>
+<tbody>
+<tr><td><code>x</code></td><td>Valore della variabile <code>x</code></td></tr>
+<tr><td><code>&amp;x</code></td><td>Indirizzo di <code>x</code></td></tr>
+<tr><td><code>p</code></td><td>Indirizzo contenuto nel puntatore</td></tr>
+<tr><td><code>*p</code></td><td>Oggetto raggiunto attraverso il puntatore</td></tr>
+</tbody>
+</table>
+</div>
+<p>L'operatore <code>&amp;</code> ricava un indirizzo; l'operatore <code>*</code>, usato in un'espressione, <strong>dereferenzia</strong> il puntatore.</p>
+
+<h3>L'asterisco nella dichiarazione e nell'uso</h3>
+<p>Nella dichiarazione <code>int *p;</code> si dichiara un puntatore a <code>int</code>. In un'istruzione, <code>*p = 50;</code> scrive nell'intero puntato. Gli spazi non cambiano il significato: <code>int *p;</code>, <code>int* p;</code> e <code>int * p;</code> sono equivalenti.</p>
+<div class="box warn">
+<div class="bt">Più variabili in una dichiarazione</div>
+<pre><code>int *p, q;     /* p è un puntatore, q è un normale int */
+int *p, *q;    /* due puntatori */</code></pre>
+<p>Non è la posizione grafica dell'asterisco a determinare il tipo: conta come è costruita la dichiarazione.</p>
+</div>
+
+<h3>Scrivere attraverso un puntatore</h3>
+<pre><code>int x = 37;
+int *p = &amp;x;
+*p = 50;
+printf("%d\n", x);   /* 50 */</code></pre>
+<p><code>*p</code> e <code>x</code> identificano lo stesso oggetto: modificare l'uno significa modificare l'altro.</p>
+
+<h2>9. La differenza fondamentale: <code>p = q</code> e <code>*p = *q</code></h2>
+<p>Situazione iniziale:</p>
+<pre><code>int x = 25;
+int y = 38;
+int *p = &amp;x;
+int *q = &amp;y;</code></pre>
+<p>Cioè <code>p</code> punta a <code>x</code> (25) e <code>q</code> punta a <code>y</code> (38).</p>
+
+<h3><code>p = q</code>: copia dell'indirizzo</h3>
+<p>Ora <strong>entrambi</strong> i puntatori raggiungono <code>y</code>.</p>
+<ul>
+<li>Non si è copiato 38 dentro <code>x</code>;</li>
+<li>si è cambiato il contenuto di <code>p</code>;</li>
+<li><code>x</code> esiste ancora (vale ancora 25) ed è accessibile con il proprio nome.</li>
+</ul>
+
+<h3><code>*p = *q</code>: copia del valore puntato</h3>
+<p>Ripartendo dalla situazione iniziale, il valore di <code>y</code> viene copiato dentro <code>x</code>: <code>x</code> e <code>y</code> valgono entrambi 38, ma i puntatori continuano a raggiungere due variabili diverse.</p>
+<div class="box thm">
+<div class="bt">Regola pratica</div>
+<p><code>p = q</code> copia il <strong>riferimento</strong>; <code>*p = *q</code> copia il <strong>valore</strong>.</p>
+<p>I due esempi vanno letti come alternative a partire dalla stessa situazione iniziale, non come istruzioni consecutive.</p>
+</div>
+
+<h2>10. Aliasing: due riferimenti allo stesso oggetto</h2>
+<p>Quando due puntatori raggiungono lo stesso oggetto si parla di <strong>aliasing</strong>.</p>
+<pre><code>int x = 3;
+int y = 5;
+int *p = &amp;x;
+int *q = &amp;y;
+
+p = q;
+*q = 7;
+printf("%d\n", *p);   /* 7 */</code></pre>
+<p>Dopo <code>p = q</code>, entrambi puntano a <code>y</code>: la modifica fatta tramite <code>q</code> è visibile anche tramite <code>p</code>. Non sono due copie che si aggiornano magicamente: il dato è <strong>uno solo</strong>.</p>
+<p>Con variabili indipendenti succede invece questo:</p>
+<pre><code>int x = 3;
+int y = 5;
+x = y;
+y = 7;
+printf("%d\n", x);   /* 5 */</code></pre>
+<p>La copia di un valore non crea un collegamento permanente tra le variabili.</p>
+
+<h2>11. Perché <code>scanf</code> vuole <code>&amp;</code>?</h2>
+<p>Per scrivere il valore letto dentro una variabile, <code>scanf</code> deve ricevere l'<strong>indirizzo</strong> della destinazione.</p>
+<pre><code>int numero;
+scanf("%d", &amp;numero);</code></pre>
+<p><code>%d</code> richiede la conversione per un intero; <code>&amp;numero</code> indica dove memorizzarlo. Se si ha già un puntatore valido alla destinazione, si può passare quello:</p>
+<pre><code>int numero;
+int *p = &amp;numero;
+scanf("%d", p);</code></pre>
+<p>Non serve <code>&amp;p</code>: sarebbe l'indirizzo della variabile puntatore, non quello dell'intero in cui si vuole scrivere.</p>
+
+<h3>E per le stringhe?</h3>
+<pre><code>char nome[31];
+scanf("%30s", nome);</code></pre>
+<p>Qui <code>nome</code> viene convertito in un puntatore al primo elemento dell'array, quindi fornisce già l'indirizzo richiesto da <code>%s</code>. Per leggere un singolo elemento: <code>scanf("%c", &amp;nome[0]);</code>.</p>
+<div class="box thm">
+<div class="bt">La regola corretta</div>
+<p>Non è «<code>scanf</code> vuole sempre <code>&amp;</code>», ma «bisogna fornire un <strong>puntatore del tipo richiesto</strong> dalla conversione».</p>
+</div>
+
+<h2>12. Puntatori a strutture e operatore <code>-&gt;</code></h2>
+<p>Con una struttura si usa il punto:</p>
+<pre><code>Dipendente dip;
+dip.stipendio = 1500;</code></pre>
+<p>Con un puntatore a una struttura:</p>
+<pre><code>Dipendente *p = &amp;dip;
+
+(*p).stipendio = 1800;   /* forma estesa */
+p-&gt;stipendio = 1800;     /* forma abbreviata, equivalente */</code></pre>
+<div class="tbl">
+<table>
+<thead><tr><th>Hai&hellip;</th><th>Scrivi</th></tr></thead>
+<tbody>
+<tr><td>una struttura</td><td><code>struttura.campo</code></td></tr>
+<tr><td>un puntatore a struttura</td><td><code>puntatore-&gt;campo</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Le parentesi in <code>(*p).stipendio</code> servono a dereferenziare <code>p</code> <strong>prima</strong> di selezionare il campo.</p>
+
+<h2>13. Esempio pratico: lavoratori e management</h2>
+<p>Archivio di 300 lavoratori, di cui si vogliono raggiungere rapidamente i 10 dirigenti. Duplicare i dirigenti in un secondo array di strutture ha un difetto: quando cambia uno stipendio, vanno aggiornate <strong>entrambe</strong> le copie. La soluzione vista a lezione usa invece un array di <strong>puntatori</strong>.</p>
+<pre><code>Lavoratore datiLavoratori[300];
+Lavoratore *management[10];</code></pre>
+<p><code>Lavoratore *management[10];</code> significa «array di 10 puntatori a <code>Lavoratore</code>». Collegamento:</p>
+<pre><code>management[0] = &amp;datiLavoratori[7];
+management[1] = &amp;datiLavoratori[42];</code></pre>
+<p>I dati restano nell'archivio principale; il secondo array offre un accesso selettivo agli <strong>stessi oggetti</strong>. Se si modifica <code>datiLavoratori[7].stipendio = 2000;</code>, allora <code>management[0]-&gt;stipendio</code> restituisce 2000, perché raggiunge la stessa struttura.</p>
+<p>Per la ricerca si visitano solo i dirigenti già selezionati, senza ricontrollare tutti i lavoratori. Il vantaggio deriva dall'organizzazione dei riferimenti, non dal fatto che <code>-&gt;</code> renda il programma più veloce.</p>
+
+<h2>14. Puntatori validi, non inizializzati e <code>NULL</code></h2>
+<p>Dichiarare un puntatore non crea automaticamente un oggetto a cui accedere.</p>
+<pre><code>int *p;
+*p = 10;   /* ERRORE: p non è stato inizializzato */</code></pre>
+<p>Prima di dereferenziare bisogna assegnare un riferimento valido:</p>
+<pre><code>int x;
+int *p = &amp;x;
+*p = 10;</code></pre>
+<p>Un puntatore può essere inizializzato a <code>NULL</code> per indicare che non punta a nessun oggetto:</p>
+<pre><code>int *p = NULL;
+*p = 10;   /* Comportamento indefinito */</code></pre>
+<p><code>NULL</code> è un valore sentinella, non uno spazio di memoria in cui scrivere.</p>
+
+<h2>15. Array e puntatori: collegati, ma non identici</h2>
+<p>È il punto più delicato della lezione.</p>
+<pre><code>int a[4] = {10, 20, 30, 40};
+int *p = a;
+int *p = &amp;a[0];   /* equivalente: stesso indirizzo */</code></pre>
+<p>Nella seconda riga <code>a</code> viene convertito in un puntatore al primo elemento. Ma un array <strong>non è</strong> una variabile puntatore: il fatto che molte espressioni convertano l'array in puntatore non rende i due oggetti intercambiabili.</p>
+
+<h3>Cosa si può modificare?</h3>
+<pre><code>p = a + 1;   /* Corretto: cambia il puntatore p */
+p++;         /* Corretto, se resta nei limiti */
+
+a = p;       /* Errore */
+a = a + 1;   /* Errore */
+a++;         /* Errore */</code></pre>
+<p>Gli <strong>elementi</strong> dell'array sono modificabili; l'<strong>intero array</strong> non può comparire come destinazione di un assegnamento.</p>
+
+<h3>Il caso confuso nella trascrizione</h3>
+<pre><code>int a[3] = {1, 2, 3};
+int b[3] = {4, 5, 6};
+a = b;          /* Errore */
+
+int *p = a;
+int *q = b;
+p = q;          /* Corretto: entrambi puntano a b[0] */</code></pre>
+<p>Solo il secondo esempio è un assegnamento tra puntatori.</p>
+
+<h2>16. <code>sizeof</code>: quanti byte occupa un oggetto?</h2>
+<p><code>sizeof</code> è un operatore che restituisce la dimensione in byte di un tipo o di un oggetto.</p>
+<pre><code>int a[5];
+sizeof(int)
+sizeof(a[0])
+sizeof(a)</code></pre>
+<p>Se sulla macchina considerata <code>sizeof(int)</code> vale 4:</p>
+<div class="tbl">
+<table>
+<thead><tr><th>Espressione</th><th>Risultato</th></tr></thead>
+<tbody>
+<tr><td><code>sizeof(int)</code></td><td>4</td></tr>
+<tr><td><code>sizeof(a[0])</code></td><td>4</td></tr>
+<tr><td><code>sizeof(a)</code></td><td>20</td></tr>
+</tbody>
+</table>
+</div>
+<p>Il valore 4 per <code>int</code> è un'ipotesi dell'esempio, non una costante universale del linguaggio.</p>
+<p>Con un puntatore, <code>int *p = a;</code>, <code>sizeof(p)</code> misura il <strong>puntatore</strong>, non l'array raggiunto. È una differenza concreta tra array e puntatori: applicando <code>sizeof</code> direttamente all'array non avviene la normale conversione al puntatore al primo elemento.</p>
+<pre><code>printf("%zu\n", sizeof(a));</code></pre>
+<p>Il formato <code>%zu</code> è quello adatto al tipo restituito da <code>sizeof</code>.</p>
+
+<h2>17. Aritmetica dei puntatori</h2>
+<h3>Aggiungere 1 significa passare all'elemento successivo</h3>
+<pre><code>int a[4] = {10, 20, 30, 40};
+int *p = a;
+
+p       /* Indirizzo di a[0] */
+p + 1   /* Indirizzo di a[1] */
+p + 2   /* Indirizzo di a[2] */</code></pre>
+<p>L'incremento è misurato in <strong>elementi del tipo puntato</strong>, non in byte. Se un <code>int</code> occupa 4 byte, passare all'elemento successivo significa avanzare di 4 byte; se si punta a strutture, il passo è la dimensione di una struttura.</p>
+
+<h3>Equivalenza tra indici e dereferenziazione</h3>
+<div class="box thm">
+<div class="bt">Equivalenze da ricordare</div>
+<p><code>a[i]</code> equivale a <code>*(a + i)</code>, e <code>&amp;a[i]</code> equivale a <code>a + i</code>.</p>
+<p>Per esempio <code>a[2]</code> e <code>*(a + 2)</code> valgono entrambi 30.</p>
+</div>
+<p>La notazione con le parentesi quadre è solo un modo più immediato per esprimere lo stesso accesso.</p>
+
+<h3>Sottrarre due puntatori</h3>
+<p>Se i puntatori appartengono allo stesso array, la sottrazione misura la differenza di posizione <strong>in elementi</strong>:</p>
+<pre><code>int a[5];
+int *p = &amp;a[4];
+int *q = &amp;a[1];
+
+p - q   /* 3 */
+q - p   /* -3 */</code></pre>
+<p>Non si ottiene il numero di byte, né il numero di elementi strettamente compresi tra le due posizioni: si ottiene la <strong>differenza degli indici</strong>.</p>
+<div class="box warn">
+<div class="bt">Refuso nella slide</div>
+<p>Nella slide con gli indirizzi 1004 e 1000 (elementi da 4 byte) è <code>p - q</code> a valere 1; la scritta <code>q - p</code> è un refuso, segnalato anche dal docente.</p>
+</div>
+
+<h3>Operazioni consentite e limiti</h3>
+<ul>
+<li>puntatore più intero;</li>
+<li>puntatore meno intero;</li>
+<li>differenza tra puntatori appartenenti allo stesso array;</li>
+<li>confronti tra puntatori, rispettando le condizioni previste dal linguaggio.</li>
+</ul>
+<p>Non si possono sommare due puntatori: <code>p + q</code> non è consentito. Percorrendo un array si può arrivare fino al puntatore subito dopo l'ultimo elemento, utile come limite del ciclo, ma <strong>non</strong> lo si può dereferenziare. Sottrazioni e confronti d'ordine tra oggetti non collegati non vanno trattati come normale aritmetica su numeri.</p>
+
+<h2>18. Inizializzazione degli array e dimensioni variabili</h2>
+<p>Nella dimostrazione finale il docente prova:</p>
+<pre><code>int dim = 4;
+int arr[dim] = {1, 2, 3, 4};   /* rifiutato dal compilatore */</code></pre>
+<p>Poiché <code>dim</code> è una variabile, si sta dichiarando un array a lunghezza variabile (<strong>VLA</strong>), che non può usare una lista di inizializzazione. Non è un compilatore «poco intelligente»: è una regola del linguaggio.</p>
+
+<h3>Dimensione costante e inizializzazione immediata</h3>
+<pre><code>#define DIM 4
+int arr[DIM] = {1, 2, 3, 4};</code></pre>
+<p>Qui la dimensione è un'espressione costante e l'inizializzazione è valida.</p>
+
+<h3>Dimensione variabile e riempimento successivo</h3>
+<p>Nel contesto C con supporto ai VLA usato a lezione:</p>
+<pre><code>int dim = 4;
+int arr[dim];
+for (int i = 0; i &lt; dim; i++) {
+  arr[i] = i + 1;
+}</code></pre>
+<p>Prima si crea l'array, poi si assegna un valore a ogni elemento. La dimensione non cambia se in seguito cambia il valore di <code>dim</code>.</p>
+
+<h3>Inizializzazione e assegnamento non sono la stessa operazione</h3>
+<pre><code>int arr[4] = {1, 2, 3, 4};   /* Valido: inizializzazione */
+
+int arr[4];
+arr = {1, 2, 3, 4};          /* Non valido: assegnamento */</code></pre>
+
+<h2>19. Esercizio d'esame: conversione da base 10 a un'altra base</h2>
+<p>Si applica l'algoritmo delle divisioni successive: dividere per la base, memorizzare il resto, proseguire con il quoziente, leggere i resti in ordine inverso.</p>
+<div class="box ex">
+<div class="bt">Esempio &mdash; $26_{10}$ in base 16</div>
+<ul>
+<li>$26 \div 16$: quoziente 1, resto 10;</li>
+<li>$1 \div 16$: quoziente 0, resto 1.</li>
+</ul>
+<p>Resti prodotti: 10, 1. Lettura inversa: 1, 10. La cifra 10 in esadecimale è <code>A</code>, quindi il risultato è $1A_{16}$.</p>
+</div>
+<p>La tabella dei simboli converte ogni resto nel carattere corrispondente:</p>
+<pre><code>char simboli[] = "0123456789ABCDEF";
+
+simboli[0]    /* '0' */
+simboli[10]   /* 'A' */
+simboli[15]   /* 'F' */</code></pre>
+
+<h3>Cuore dell'algoritmo</h3>
+<p>Assumendo numero positivo, base tra 2 e 16 e array abbastanza capiente:</p>
+<pre><code>int i = 0;
+while (n &gt; 0) {
+  resti[i] = n % base;
+  n = n / base;
+  i++;
+}</code></pre>
+<p>Alla fine <code>i</code> indica la prima posizione libera, quindi l'ultima posizione occupata è <code>i - 1</code>. Stampa inversa:</p>
+<pre><code>i--;
+while (i &gt;= 0) {
+  printf("%c", simboli[resti[i]]);
+  i--;
+}
+printf("\n");</code></pre>
+<p>Il passaggio chiave è <code>simboli[resti[i]]</code>: prima si recupera il resto numerico, poi lo si usa come <strong>indice</strong> per scegliere il simbolo. Così si evita una lunga sequenza di <code>if</code> per distinguere le cifre.</p>
+
+<h3>Limiti da non dimenticare</h3>
+<ul>
+<li>Con <code>n == 0</code> il ciclo non parte: bisogna stampare esplicitamente 0.</li>
+<li>Con base 1, dividere un numero positivo per 1 non lo riduce: l'algoritmo <strong>non termina</strong>.</li>
+<li>L'array deve avere spazio sufficiente per tutti i resti.</li>
+<li>Il procedimento modifica <code>n</code>: conservare una copia se serve il valore iniziale.</li>
+<li>Gli interi negativi richiedono una gestione ulteriore del segno.</li>
+</ul>
+<p>Per questo algoritmo l'intervallo delle basi è da 2 a 16, <strong>non</strong> da 1 a 16 come compare in un passaggio della trascrizione.</p>
+
+<h2>20. Scheda finale da ripasso</h2>
+<div class="tbl">
+<table>
+<thead><tr><th>Scrittura</th><th>Significato</th></tr></thead>
+<tbody>
+<tr><td><code>int *p;</code></td><td>Dichiara un puntatore a <code>int</code></td></tr>
+<tr><td><code>p = &amp;x;</code></td><td>Fa puntare <code>p</code> a <code>x</code></td></tr>
+<tr><td><code>*p = 10;</code></td><td>Scrive 10 nell'oggetto puntato</td></tr>
+<tr><td><code>p = q;</code></td><td>Copia il puntatore</td></tr>
+<tr><td><code>*p = *q;</code></td><td>Copia il valore puntato</td></tr>
+<tr><td><code>s.campo</code></td><td>Accede al campo di una struttura</td></tr>
+<tr><td><code>p-&gt;campo</code></td><td>Accede al campo di una struttura tramite puntatore</td></tr>
+<tr><td><code>a[i]</code></td><td>Elemento di indice <code>i</code></td></tr>
+<tr><td><code>*(a + i)</code></td><td>Equivalente a <code>a[i]</code></td></tr>
+<tr><td><code>sizeof(a)</code></td><td>Se <code>a</code> è l'array, misura l'intero array</td></tr>
+<tr><td><code>sizeof(p)</code></td><td>Misura il puntatore</td></tr>
+<tr><td><code>dip2 = dip1</code></td><td>Copia una struttura dello stesso tipo</td></tr>
+<tr><td><code>a = b</code>, con due array</td><td>Non consentito</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">Le tre domande da farsi davanti a un'espressione</div>
+<ol>
+<li>Qui ho un valore, una struttura, un array o un puntatore?</li>
+<li>Sto cambiando un indirizzo oppure il contenuto dell'oggetto raggiunto?</li>
+<li>Dopo questa istruzione ho due oggetti indipendenti o due riferimenti allo stesso oggetto?</li>
+</ol>
+<p>Sono le domande che distinguono una <strong>copia</strong> da un <strong>alias</strong>.</p>
+</div>
+
+<h3>Mini-autoverifica</h3>
+<p>Prova a rispondere senza guardare gli appunti:</p>
+<ol>
+<li>Perché <code>b = a</code> non funziona con due array, mentre <code>dip2 = dip1</code> funziona con due struct?</li>
+<li>Che differenza c'è tra <code>p = q</code> e <code>*p = *q</code>?</li>
+<li>Perché in <code>int *p, q;</code> la variabile <code>q</code> non è un puntatore?</li>
+<li>Quanto vale <code>sizeof(p)</code> se <code>p</code> punta a un array di 5 <code>int</code>? Perché è diverso da <code>sizeof(a)</code>?</li>
+<li>Perché i valori di <code>QUATTRO</code>, <code>SEI</code>, <code>OTTO</code> non sono 4, 6, 8?</li>
+<li>Perché un array di 100 caratteri pieno non si può stampare in sicurezza con <code>%s</code>?</li>
+<li>Perché la conversione in base 1 non termina?</li>
+</ol>
